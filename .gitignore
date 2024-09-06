@@ -1,0 +1,19 @@
+# virtual environment #
+venv/
+
+# PyCharm #
+.idea/
+
+# python #
+__pycache__/
+*.pyc
+
+# OS-related files #
+.DS_Store
+
+# migrations #
+*/migrations/*
+!*/migrations/__init__.py
+
+# database #
+db.sqlite3
