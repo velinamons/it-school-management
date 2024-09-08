@@ -1,0 +1,124 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Home | NextGen Robotics{% endblock %}
+
+{% block content %}
+            <!-- Header-->
+            <header class="bg-dark py-5">
+                <div class="container px-5">
+                    <div class="row gx-5 align-items-center justify-content-center">
+                        <div class="col-lg-8 col-xl-7 col-xxl-6">
+                            <div class="my-5 text-center text-xl-start">
+                                <h1 class="display-5 fw-bolder text-white mb-2">NextGen Robotics: Shaping Future Innovators</h1>
+                                <p class="lead fw-normal text-white-50 mb-4">Dive into the world of robotics with engaging, hands-on learning experiences tailored for kids and teens.</p>
+                                <p class="lead fw-normal text-white-50 mb-4">At NextGen Robotics, we fuel creativity, critical thinking, and problem-solving through interactive, dynamic courses, empowering the next generation of inventors, engineers, and innovators to shape the future.</p>
+                                <div class="d-grid gap-3 d-sm-flex justify-content-sm-center justify-content-xl-start">
+                                    <a class="btn btn-primary btn-lg px-4 me-sm-3" href="{% url 'courses' %}">Get Started</a>
+                                    <a class="btn btn-outline-light btn-lg px-4" href="#features">Learn More</a>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-xl-5 col-xxl-6 d-none d-xl-block text-center"><img class="img-fluid rounded-3 my-5" src="{% static 'images/home.jpg' %}" alt="..." /></div>
+                    </div>
+                </div>
+            </header>
+            <!-- Features section-->
+            <section class="py-5" id="features">
+                <div class="container px-5 my-5">
+                    <div class="row gx-5">
+                        <div class="col-lg-4 mb-5 mb-lg-0"><h2 class="fw-bolder mb-0">A better way to inspire young innovators.</h2></div>
+                        <div class="col-lg-8">
+                            <div class="row gx-5 row-cols-1 row-cols-md-2">
+                                <div class="col mb-5 h-100">
+                                    <div class="feature bg-primary bg-gradient text-white rounded-3 mb-3"><i class="bi bi-people"></i></div>
+                                    <h2 class="h5">Free Trial Lessons</h2>
+                                    <p class="mb-0">Sign up for our weekly open lessons to experience our teaching firsthand. Register — no commitment to join the full course.</p>
+                                </div>
+                                <div class="col mb-5 h-100">
+                                    <div class="feature bg-primary2 bg-gradient text-white rounded-3 mb-3"><i class="bi bi-graph-up"></i></div>
+                                    <h2 class="h5">Student Dashboard</h2>
+                                    <p class="mb-0">Access all your courses, track lesson schedules, monitor grades, and stay organized with our all-in-one dashboard.</p>
+                                </div>
+                                 <div class="col mb-5 h-100">
+                                    <div class="feature bg-primary2 bg-gradient text-white rounded-3 mb-3"><i class="bi bi-lightning-charge"></i></div>
+                                    <h2 class="h5">Hands-On Learning</h2>
+                                    <p class="mb-0">Our courses focus on practical, hands-on activities, allowing students to design, build, and program robots in every session.</p>
+                                </div>
+                                <div class="col mb-5 h-100">
+                                    <div class="feature bg-primary bg-gradient text-white rounded-3 mb-3"><i class="bi bi-files"></i></div>
+                                    <h2 class="h5">All Materials Provided</h2>
+                                    <p class="mb-0">We provide everything needed to learn and build during lessons. Students can take home their final projects once the course is complete.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            <!-- Courses preview section-->
+            <section class="py-5 bg-light-darker">
+                <div class="container px-5 my-5">
+                    <div class="row gx-5 justify-content-center">
+                        <div class="col-lg-8 col-xl-6">
+                            <div class="text-center">
+                                <h2 class="fw-bolder">Featured Robotics Courses</h2>
+                                <p class="lead fw-normal text-muted mb-5">Discover our most popular robotics courses, specially selected for their engaging content and impact. </p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row gx-5">
+                        <!-- Robot Explorers Course -->
+                       <div class="col-lg-4 mb-5">
+                        <div class="card h-100 shadow border-0">
+                            <img class="card-img-top" src="https://dummyimage.com/600x350/ced4da/6c757d" alt="Robot Explorers" />
+                            <div class="card-body p-4">
+                                <div class="badge bg-primary bg-gradient rounded-pill mb-2">Beginner</div>
+                                <div class="badge bg-primary2 bg-gradient rounded-pill mb-2">Ages 6-8</div>
+                                <a class="text-decoration-none link-dark stretched-link" href="#!">
+                                    <h5 class="card-title mb-3">Robot Explorers</h5>
+                                </a>
+                                <p class="card-text mb-0">An introductory course focusing on fun, hands-on activities with simple robots and block-based programming tools like Scratch.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Junior Robotics Innovators Course -->
+                    <div class="col-lg-4 mb-5">
+                        <div class="card h-100 shadow border-0">
+                            <img class="card-img-top" src="https://dummyimage.com/600x350/adb5bd/495057" alt="Junior Robotics Innovators" />
+                            <div class="card-body p-4">
+                                <div class="badge bg-primary bg-gradient rounded-pill mb-2">Intermediate</div>
+                                <div class="badge bg-primary2 bg-gradient rounded-pill mb-2">Ages 9-12</div>
+                                <a class="text-decoration-none link-dark stretched-link" href="#!">
+                                    <h5 class="card-title mb-3">Junior Robotics Innovators</h5>
+                                </a>
+                                <p class="card-text mb-0">This course teaches robotics and basic programming through exciting, hands-on projects using beginner-friendly tools.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Teen Robotics Fundamentals Course -->
+                    <div class="col-lg-4 mb-5">
+                        <div class="card h-100 shadow border-0">
+                            <img class="card-img-top" src="https://dummyimage.com/600x350/6c757d/343a40" alt="Teen Robotics Fundamentals" />
+                            <div class="card-body p-4">
+                                <div class="badge bg-primary bg-gradient rounded-pill mb-2">Intermediate</div>
+                                <div class="badge bg-primary2 bg-gradient rounded-pill mb-2">Ages 13-15</div>
+                                <a class="text-decoration-none link-dark stretched-link" href="#!">
+                                    <h5 class="card-title mb-3">Teen Robotics Fundamentals</h5>
+                                    </a>
+                                    <p class="card-text mb-0">This course covers robotics mechanics, programming, and electronics, preparing students for more complex projects.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row gx-5 justify-content-center">
+                        <div class="col-lg-8 col-xl-6">
+                            <div class="text-center">
+                                <a class="btn btn-primary btn-lg mb-3" href="{% url 'courses' %}">Explore All Courses</a>
+                                <p class="lead fw-normal text-muted mb-1">Ready to explore more? Check out our full range of courses tailored for kids and teens at every skill level.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </section>
+{% endblock %}
