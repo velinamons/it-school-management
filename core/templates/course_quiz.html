@@ -1,0 +1,83 @@
+{% extends 'base.html' %}
+{% block title %}Course Quiz{% endblock %}
+
+{% block content %}
+    <section class="py-5">
+        <div class="container px-5 my-3">
+            <div class="text-center my-3">
+                <h1 class="fw-bolder mb-2">Please Fill Out the Form</h1>
+                <p class="lead fw-normal text-muted mb-3">To make a suggestion, please answer the questions below</p>
+            </div>
+
+            <div class="bg-light rounded-3 py-5 px-5 px-md-5 mb-5 custom-margin">
+                <div class="row gx-6 justify-content-center">
+                    <div class="col-lg-8 col-xl-11">
+                        <form method="POST" id="suggestionForm" novalidate>
+                            {% csrf_token %}
+
+                            <!-- Age Group -->
+                            <div class="mb-3">
+                                <label class="form-label">{{ form.age_group.label }}</label>
+                                <div class="center-input">
+                                    {% for radio in form.age_group %}
+                                        <div class="form-check form-check-inline">
+                                            {{ radio.tag }}
+                                            {{ radio.choice_label }}
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                                <div class="invalid-feedback d-block">
+                                    {% if form.age_group.errors %}
+                                        {{ form.age_group.errors }}
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <!-- Programming/Robotics Experience -->
+                            <div class="mb-3">
+                                <label class="form-label">{{ form.experience.label }}</label>
+                                <div class="center-input experience-options">
+                                    {% for choice in form.experience.field.choices %}
+                                        <label class="experience-option {% if form.experience.value == choice.0 %} selected {% endif %}">
+                                            <input type="radio" name="{{ form.experience.name }}" value="{{ choice.0 }}" id="{{ choice.0 }}" {% if form.experience.value == choice.0 %}checked{% endif %}>
+                                            <span class="experience-label">{{ choice.0 }}</span>
+                                            <span class="experience-description">{{ choice.1 }}</span>
+                                        </label>
+                                    {% endfor %}
+                                </div>
+                                <div class="invalid-feedback d-block">
+                                    {% if form.experience.errors %}
+                                        {{ form.experience.errors }}
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <!-- Learning Goal -->
+                            <div class="mb-3">
+                                <label class="form-label">{{ form.learning_goal.label }}</label>
+                                <div class="center-input" >
+                                    {% for checkbox in form.learning_goal %}
+                                        <div class="form-check form-check-inline" >
+                                            {{ checkbox.tag }}
+                                            {{ checkbox.choice_label }}
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                                <div class="invalid-feedback d-block">
+                                    {% if form.learning_goal.errors %}
+                                        {{ form.learning_goal.errors }}
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <!-- Submit Button -->
+                            <div class="text-center">
+                                <button type="submit" id="submitBtn" class="btn btn-primary btn-lg px-4 me-sm-3">Make Suggestion</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+{% endblock %}
