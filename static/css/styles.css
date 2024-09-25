@@ -2126,12 +2126,15 @@ progress {
 
 textarea.form-control {
   min-height: calc(1.5em + 0.75rem + 2px);
+  resize: none;
 }
 textarea.form-control-sm {
   min-height: calc(1.5em + 0.5rem + 2px);
+  resize: none;
 }
 textarea.form-control-lg {
   min-height: calc(1.5em + 1rem + 2px);
+  resize: none;
 }
 
 .form-control-color {
@@ -10950,4 +10953,10 @@ html {
 .selected {
   border-color:var(--bs-primary);
   background-color: var(--bs-light-darker);
+}
+.disabled-style {
+  background-color: var(--bs-border-color);
+  color:var(--bs-primary);
+  font-weight: bold;
+  pointer-events: none;
 }
