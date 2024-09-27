@@ -1,21 +1,12 @@
 from django import forms
-from school_management.models import ContactMessage
+from school_management.models import ContactMessage, Course, Experience, Goal
+from django.core.exceptions import ValidationError
 
 
 class SuggestionForm(forms.Form):
-    AGE_GROUP_CHOICES = [
-        ('6-8', '6-8 y.o.'),
-        ('9-12', '9-12 y.o.'),
-        ('13-15', '13-15 y.o.'),
-        ('16-18', '16-18 y.o.')
-    ]
-
-    EXPERIENCE_CHOICES = [
-        ('Beginner', 'Starting from scratch'),
-        ('Learner', 'Know basic concepts'),
-        ('Builder', 'Made small projects'),
-        ('Inventor', 'Created own projects')
-    ]
+    AGE_GROUP_CHOICES = Course.AGE_GROUP_CHOICES
+    EXPERIENCE_CHOICES = [(exp.name, exp.description) for exp in Experience.objects.all()]
+    LEARNING_GOAL_CHOICES = [(goal.name, goal.name) for goal in Goal.objects.all()]
 
     age_group = forms.ChoiceField(
         label="Age Group:",
@@ -37,11 +28,7 @@ class SuggestionForm(forms.Form):
 
     learning_goal = forms.MultipleChoiceField(
         label="Learning Goal:",
-        choices=[
-            ('Creative Fun', 'Creative Fun'),
-            ('Future Education', 'Future Education'),
-            ('Innovation Exploration', 'Innovation Exploration')
-        ],
+        choices=LEARNING_GOAL_CHOICES,
         widget=forms.CheckboxSelectMultiple(attrs={'class': 'form-check-input'}),
         error_messages={
             'required': 'Please choose a learning goal.'
@@ -62,8 +49,14 @@ class ContactForm(forms.ModelForm):
         }
         widgets = {
             'name': forms.TextInput(attrs={'class': 'form-control'}),
-            'phone': forms.TextInput(attrs={'class': 'form-control'}),
+            'phone': forms.TextInput(attrs={'class': 'form-control', 'placeholder': '(0__) ___-__-__'}),
             'message': forms.Textarea(attrs={'class': 'form-control', 'maxlength': '250', 'rows': '5'}),
             'suggested_course': forms.TextInput(attrs={'class': 'form-control', 'readonly': True}),
             'suggestion_details': forms.TextInput(attrs={'class': 'form-control', 'readonly': True}),
         }
+
+    def clean_phone(self):
+        phone = self.cleaned_data.get('phone')
+        if not phone.isdigit() or len(phone) != 10:
+            raise ValidationError("Please enter a valid phone number.")
+        return f"+38{phone}"

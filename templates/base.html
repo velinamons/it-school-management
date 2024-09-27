@@ -30,9 +30,12 @@
                         <li class="nav-item"><a class="nav-link" href="{% url 'home' %}">Home</a></li>
                         <li class="nav-item"><a class="nav-link" href="{% url 'courses' %}">Courses</a></li>
                         <li class="nav-item"><a class="nav-link" href="{% url 'locations' %}">Locations</a></li>
-                        <li class="nav-item"><a class="nav-link" href="{% url 'about' %}">About</a></li>
-                        <li class="nav-item"><a class="nav-link" href="{% url 'faq' %}">FAQ</a></li>
+                        <li class="nav-item"><a class="nav-link" href="{% url 'contact' %}">Contact us</a></li>
                     </ul>
+                    <div class="navbar-nav ms-auto">
+                    <a class="btn btn-sm btn-primary px-4 me-sm-3" href="{% url 'login' %}">Log in</a>
+                    <a class="btn btn-sm btn-outline-secondary px-4 me-sm-3" href="{% url 'register' %}">Register</a>
+                    </div>
                 </div>
             </div>
         </nav>
@@ -49,13 +52,6 @@
             <div class="row align-items-center justify-content-between flex-column flex-sm-row">
                 <div class="col-auto">
                     <div class="small m-0 text-white">Copyright &copy; NextGen Robotics 2023</div>
-                </div>
-                <div class="col-auto">
-                    <a class="link-light small" href="#!">Privacy</a>
-                    <span class="text-white mx-1">&middot;</span>
-                    <a class="link-light small" href="#!">Terms</a>
-                    <span class="text-white mx-1">&middot;</span>
-                    <a class="link-light small" href="#!">Contact</a>
                 </div>
             </div>
         </div>
