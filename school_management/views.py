@@ -1,23 +1,24 @@
 from django.shortcuts import render, redirect
 from django.views.decorators.cache import never_cache
 from .forms import SuggestionForm, ContactForm
-from .models import Course, Experience, Goal
+from .models import Course
 
 
-def filter_courses_by_age(age_group):
-    return Course.objects.filter(age_group=age_group)
+def filter_courses_by_age(courses_list, age_group):
+    return courses_list.filter(age_group=age_group)
 
 
-def filter_courses_by_experience(courses, experience_name):
-    return courses.filter(experience__name=experience_name)
+def filter_courses_by_experience(courses_list, experience_name):
+    return courses_list.filter(experience__name=experience_name)
 
 
-def filter_courses_by_goals(courses, learning_goals):
-    return courses.filter(goals__name__in=learning_goals).distinct()
+def filter_courses_by_goals(courses_list, learning_goals):
+    return courses_list.filter(goals__name__in=learning_goals).distinct()
 
 
 def select_course(age_group, experience_name, learning_goals):
-    age_filtered_courses = filter_courses_by_age(age_group)
+    courses_list = Course.objects.all()
+    age_filtered_courses = filter_courses_by_age(courses_list, age_group)
     experience_filtered_courses = filter_courses_by_experience(age_filtered_courses, experience_name)
     goal_matched_courses = filter_courses_by_goals(experience_filtered_courses, learning_goals)
 
