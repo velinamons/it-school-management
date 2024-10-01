@@ -1,58 +1,62 @@
+from django.http import HttpRequest, HttpResponse
 from django.shortcuts import render, redirect
 from django.views.decorators.cache import never_cache
+from django.views.generic import ListView, DetailView
+from django_filters.views import FilterView
+from .filters import CourseFilter
 from .forms import SuggestionForm, ContactForm
-from .models import Course
+from .models import Course, Filia
+from .course_filtering import select_course
 
 
-def filter_courses_by_age(courses_list, age_group):
-    return courses_list.filter(age_group=age_group)
+def home(request: HttpRequest) -> HttpResponse:
+    courses = Course.objects.all().order_by("name")[:3]
+
+    context = {"courses": courses}
+
+    return render(request, "home.html", context)
 
 
-def filter_courses_by_experience(courses_list, experience_name):
-    return courses_list.filter(experience__name=experience_name)
+class FiliaListView(ListView):
+    template_name = "filias.html"
+    context_object_name = "filias"
+    queryset = Filia.objects.all().order_by("name")
 
 
-def filter_courses_by_goals(courses_list, learning_goals):
-    return courses_list.filter(goals__name__in=learning_goals).distinct()
+class FiliaDetailView(DetailView):
+    template_name = "filia_details.html"
+    context_object_name = "filia"
+    queryset = Filia.objects.prefetch_related("groups__filia")
 
 
-def select_course(age_group, experience_name, learning_goals):
-    courses_list = Course.objects.all()
-    age_filtered_courses = filter_courses_by_age(courses_list, age_group)
-    experience_filtered_courses = filter_courses_by_experience(age_filtered_courses, experience_name)
-    goal_matched_courses = filter_courses_by_goals(experience_filtered_courses, learning_goals)
-
-    if goal_matched_courses.exists():
-        return goal_matched_courses.first()
-    return None
+class CourseListView(FilterView):
+    template_name = "courses.html"
+    context_object_name = "courses"
+    filterset_class = CourseFilter
+    paginate_by = None
+    queryset = Course.objects.prefetch_related("experience", "groups__filia").distinct()
 
 
-def home(request):
-    return render(request, "home.html")
+class CourseDetailView(DetailView):
+    template_name = "course_details.html"
+    context_object_name = "course"
+    queryset = Course.objects.prefetch_related("experience", "groups__filia")
 
 
-def locations(request):
-    return render(request, "locations.html")
-
-
-def courses(request):
-    return render(request, "courses.html")
-
-
-def contact_success(request):
+def contact_success(request: HttpRequest) -> HttpResponse:
     return render(request, "contact_success.html")
 
 
-def login(request):
+def login(request: HttpRequest) -> HttpResponse:
     return render(request, "authorization/login.html")
 
 
-def register(request):
+def register(request: HttpRequest) -> HttpResponse:
     return render(request, "authorization/register.html")
 
 
 @never_cache
-def course_quiz(request):
+def course_quiz(request: HttpRequest) -> HttpResponse:
     if request.method == "POST":
         form = SuggestionForm(request.POST)
         if form.is_valid():
@@ -67,28 +71,18 @@ def course_quiz(request):
     return render(request, "course_quiz.html", {"form": form})
 
 
-def contact(request):
-    if request.method == "POST":
-        form = ContactForm(request.POST)
-        if form.is_valid():
-            form.save()
-            return redirect("contact_success")
-    else:
-        form = ContactForm()
-
-    return render(request, "contact.html", {"form": form})
-
-
 @never_cache
-def contact_with_quiz(request):
-    age_group = request.session.get("age_group")
-    experience = request.session.get("experience")
-    learning_goal = request.session.get("learning_goal")
+def contact_with_quiz(request: HttpRequest) -> HttpResponse:
+    age_group = request.session.get("age_group", "")
+    experience = request.session.get("experience", "")
+    learning_goal = request.session.get("learning_goal", [])
 
     if not all([age_group, experience, learning_goal]):
-        return redirect('course_quiz')
+        return redirect("course_quiz")
 
-    suggestion_details = f"Age: {age_group}. Experience: {experience}. Goal: {', '.join(learning_goal)}."
+    suggestion_details = (
+        f"Age: {age_group}. Experience: {experience}. Goal: {', '.join(learning_goal)}."
+    )
     selected_course = select_course(age_group, experience, learning_goal)
 
     if selected_course:
@@ -105,13 +99,19 @@ def contact_with_quiz(request):
             contact_message.save()
             return redirect("contact_success")
     else:
-        form = ContactForm(initial={
-            "suggested_course": suggested_course_name,
-            "suggestion_details": suggestion_details
-        })
+        form = ContactForm(
+            initial={
+                "suggested_course": suggested_course_name,
+                "suggestion_details": suggestion_details,
+            }
+        )
 
-    return render(request, "contact_with_quiz.html", {
-        "form": form,
-        "suggested_course": suggested_course_name,
-        "suggestion_details": suggestion_details
-    })
+    return render(
+        request,
+        "contact_with_quiz.html",
+        {
+            "form": form,
+            "suggested_course": suggested_course_name,
+            "suggestion_details": suggestion_details,
+        },
+    )

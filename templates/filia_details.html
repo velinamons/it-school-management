@@ -1,0 +1,38 @@
+    <!-- templates/courses/filia_detail.html -->
+    {% extends 'base.html' %}
+    {% load static %}
+    
+    {% block title %}{{ filia.name }} | NextGen Robotics{% endblock %}
+    
+    {% block content %}
+    <!-- Filia Detail Section -->
+    <section class="py-5">
+        <div class="container px-5 my-5">
+            <div class="row gx-5">
+                <!-- Filia Image -->
+                <div class="col-lg-6 mb-5">
+                        <img class="img-fluid rounded" src="https://dummyimage.com/600x350/e0e3e8/0011ff&text=++{{ filia.name }}" alt="{{ filia.name }}" />
+                </div>
+                <!-- Filia Details -->
+                <div class="col-lg-6">
+                    <h3>Description</h3>
+                    <p>{{ filia.description }}</p>
+                    
+                    <h3>Location</h3>
+                    <p><strong>City:</strong> {{ filia.city }}</p>
+                    <p><strong>Address:</strong> {{ filia.address }}</p>
+                    
+                    <!-- Optional: Display Courses Available at This Filia -->
+                    <h3>Available Courses</h3>
+                    <ul>
+                        {% for group in filia.groups.all %}
+                            <li><a href="{% url 'course_details' group.course.pk %}">{{ group.course.name }}</a></li>
+                        {% empty %}
+                            <li>No courses are currently offered at this Filia.</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+    {% endblock %}

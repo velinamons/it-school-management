@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ course.name }} | NextGen Robotics{% endblock %}
+
+{% block content %}
+<section class="py-5">
+    <div class="container px-5 my-5">
+        <div class="row gx-5">
+            <div class="col-lg-8">
+                <h1 class="fw-bolder">{{ course.name }}</h1>
+                <p class="text-muted">Recommended Age Group: {{ course.get_age_group_display }}</p>
+                <img class="img-fluid rounded mb-4" src="https://dummyimage.com/600x350/e0e3e8/0011ff&text=++{{ course.name }}" alt="{{ course.name }}" />
+                <p>{{ course.description }}</p>
+                
+                <!-- Experience Section -->
+                <h3>Experience Required</h3>
+                <ul>
+                    {% for exp in course.experience.all %}
+                        <li><strong>{{ exp.name }}:</strong> {{ exp.description }}</li>
+                    {% empty %}
+                        <li>No specific experience required.</li>
+                    {% endfor %}
+                </ul>
+                
+                <!-- Goals Section -->
+                <h3>Course Goals</h3>
+                <ul>
+                    {% for goal in course.goals.all %}
+                        <li>{{ goal.name }}</li>
+                    {% empty %}
+                        <li>No specific goals listed.</li>
+                    {% endfor %}
+                </ul>
+                
+                <!-- Filias Offering the Course -->
+                <h3>Available at Filias</h3>
+                <ul>
+                    {% for group in course.groups.all %}
+                        <li>{{ group.filia.name }} - {{ group.filia.city }}</li>
+                    {% empty %}
+                        <li>No Filias currently offering this course.</li>
+                    {% endfor %}
+                </ul>
+            </div>
+            <div class="col-lg-4">
+                <!-- Sidebar or Additional Information -->
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Enroll Now</h5>
+                        <p class="card-text">Join our {{ course.name }} course and embark on an exciting journey in robotics!</p>
+                        <a href="#" class="btn btn-primary">Enroll</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

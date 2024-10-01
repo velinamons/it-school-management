@@ -1,162 +1,94 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block title %}Courses | NextGen Robotics{% endblock %}
 
 {% block content %}
-            <!-- Pricing section-->
-            <section class="bg-light py-5">
-                <div class="container px-5 my-5">
-                    <div class="text-center mb-5">
-                        <h1 class="fw-bolder">Pay as you grow</h1>
-                        <p class="lead fw-normal text-muted mb-0">With our no hassle pricing plans</p>
-                    </div>
-                    <div class="row gx-5 justify-content-center">
-                        <!-- Pricing card free-->
-                        <div class="col-lg-6 col-xl-4">
-                            <div class="card mb-5 mb-xl-0">
-                                <div class="card-body p-5">
-                                    <div class="small text-uppercase fw-bold text-muted">Free</div>
-                                    <div class="mb-3">
-                                        <span class="display-4 fw-bold">$0</span>
-                                        <span class="text-muted">/ mo.</span>
-                                    </div>
-                                    <ul class="list-unstyled mb-4">
-                                        <li class="mb-2">
-                                            <i class="bi bi-check text-primary"></i>
-                                            <strong>1 users</strong>
-                                        </li>
-                                        <li class="mb-2">
-                                            <i class="bi bi-check text-primary"></i>
-                                            5GB storage
-                                        </li>
-                                        <li class="mb-2">
-                                            <i class="bi bi-check text-primary"></i>
-                                            Unlimited public projects
-                                        </li>
-                                        <li class="mb-2">
-                                            <i class="bi bi-check text-primary"></i>
-                                            Community access
-                                        </li>
-                                        <li class="mb-2 text-muted">
-                                            <i class="bi bi-x"></i>
-                                            Unlimited private projects
-                                        </li>
-                                        <li class="mb-2 text-muted">
-                                            <i class="bi bi-x"></i>
-                                            Dedicated support
-                                        </li>
-                                        <li class="mb-2 text-muted">
-                                            <i class="bi bi-x"></i>
-                                            Free linked domain
-                                        </li>
-                                        <li class="text-muted">
-                                            <i class="bi bi-x"></i>
-                                            Monthly status reports
-                                        </li>
-                                    </ul>
-                                    <div class="d-grid"><a class="btn btn-outline-primary" href="#!">Choose plan</a></div>
-                                </div>
-                            </div>
-                        </div>
-                        <!-- Pricing card pro-->
-                        <div class="col-lg-6 col-xl-4">
-                            <div class="card mb-5 mb-xl-0">
-                                <div class="card-body p-5">
-                                    <div class="small text-uppercase fw-bold">
-                                        <i class="bi bi-star-fill text-warning"></i>
-                                        Pro
-                                    </div>
-                                    <div class="mb-3">
-                                        <span class="display-4 fw-bold">$9</span>
-                                        <span class="text-muted">/ mo.</span>
-                                    </div>
-                                    <ul class="list-unstyled mb-4">
-                                        <li class="mb-2">
-                                            <i class="bi bi-check text-primary"></i>
-                                            <strong>5 users</strong>
-                                        </li>
-                                        <li class="mb-2">
-                                            <i class="bi bi-check text-primary"></i>
-                                            5GB storage
-                                        </li>
-                                        <li class="mb-2">
-                                            <i class="bi bi-check text-primary"></i>
-                                            Unlimited public projects
-                                        </li>
-                                        <li class="mb-2">
-                                            <i class="bi bi-check text-primary"></i>
-                                            Community access
-                                        </li>
-                                        <li class="mb-2">
-                                            <i class="bi bi-check text-primary"></i>
-                                            Unlimited private projects
-                                        </li>
-                                        <li class="mb-2">
-                                            <i class="bi bi-check text-primary"></i>
-                                            Dedicated support
-                                        </li>
-                                        <li class="mb-2">
-                                            <i class="bi bi-check text-primary"></i>
-                                            Free linked domain
-                                        </li>
-                                        <li class="text-muted">
-                                            <i class="bi bi-x"></i>
-                                            Monthly status reports
-                                        </li>
-                                    </ul>
-                                    <div class="d-grid"><a class="btn btn-primary" href="#!">Choose plan</a></div>
-                                </div>
-                            </div>
-                        </div>
-                        <!-- Pricing card enterprise-->
-                        <div class="col-lg-6 col-xl-4">
-                            <div class="card">
-                                <div class="card-body p-5">
-                                    <div class="small text-uppercase fw-bold text-muted">Enterprise</div>
-                                    <div class="mb-3">
-                                        <span class="display-4 fw-bold">$49</span>
-                                        <span class="text-muted">/ mo.</span>
-                                    </div>
-                                    <ul class="list-unstyled mb-4">
-                                        <li class="mb-2">
-                                            <i class="bi bi-check text-primary"></i>
-                                            <strong>Unlimited users</strong>
-                                        </li>
-                                        <li class="mb-2">
-                                            <i class="bi bi-check text-primary"></i>
-                                            5GB storage
-                                        </li>
-                                        <li class="mb-2">
-                                            <i class="bi bi-check text-primary"></i>
-                                            Unlimited public projects
-                                        </li>
-                                        <li class="mb-2">
-                                            <i class="bi bi-check text-primary"></i>
-                                            Community access
-                                        </li>
-                                        <li class="mb-2">
-                                            <i class="bi bi-check text-primary"></i>
-                                            Unlimited private projects
-                                        </li>
-                                        <li class="mb-2">
-                                            <i class="bi bi-check text-primary"></i>
-                                            Dedicated support
-                                        </li>
-                                        <li class="mb-2">
-                                            <i class="bi bi-check text-primary"></i>
-                                            <strong>Unlimited</strong>
-                                            linked domains
-                                        </li>
-                                        <li class="text-muted">
-                                            <i class="bi bi-check text-primary"></i>
-                                            Monthly status reports
-                                        </li>
-                                    </ul>
-                                    <div class="d-grid"><a class="btn btn-outline-primary" href="#!">Choose plan</a></div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+<!-- Header section -->
+<section class="bg-light-darker">
+        <div class="row gx-5 py-5 justify-content-center">
+            <div class="col-lg-12">
+                <div class="text-center">
+                    <h2 class="fw-bolder">Our Robotics Courses</h2>
                 </div>
-            </section>
-        {% endblock %}
+            </div>
+        </div>
+</section>
+
+<!-- filter + courses section-->
+<section class="py-5">
+    <div class="container px-5 my-5">
+        <div class="row gx-5">
+            <!-- Filters Section -->
+            <div class="col-lg-3 mb-5">
+                <div class="bg-light p-4 shadow-sm rounded">
+                    <h5 class="fw-bold mb-4">Filter by</h5>
+                    <form method="get">
+                        <!-- Experience Filter -->
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">Experience</label>
+                            {% for checkbox in filter.form.experience %}
+                                <div class="form-check">
+                                    {{ checkbox.tag }}
+                                    <label class="form-check-label" for="{{ checkbox.id_for_label }}">{{ checkbox.choice_label }}</label>
+                                </div>
+                            {% endfor %}
+                        </div>
+
+                        <!-- Filia Filter -->
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">Filia</label>
+                            {% for checkbox in filter.form.filia %}
+                                <div class="form-check">
+                                    {{ checkbox.tag }}
+                                    <label class="form-check-label" for="{{ checkbox.id_for_label }}">{{ checkbox.choice_label }}</label>
+                                </div>
+                            {% endfor %}
+                        </div>
+
+                        <button type="submit" class="btn btn-primary w-100">Filter</button>
+                        <a href="{% url 'courses' %}" class="btn btn-secondary w-100 mt-3">Reset</a>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Courses Section -->
+            <div class="col-lg-9">
+                <div class="row gx-5">
+                    {% for course in courses %}
+                    <div class="col-md-6 col-lg-4 mb-5">
+                        <div class="card h-100 shadow border-0">
+                            <img class="card-img-top" src="https://dummyimage.com/600x350/e0e3e8/0011ff&text=++{{ course.name }}" alt="{{ course.name }}" />
+                            <div class="card-body p-4">
+                                <!-- Experience Badges -->
+                                {% for exp in course.experience.all %}
+                                    <div class="badge bg-primary bg-gradient rounded-pill mb-2">{{ exp.name }}</div>
+                                {% endfor %}
+
+                                <!-- Age Group Badge -->
+                                {% if course.age_group %}
+                                    <div class="badge bg-primary2 bg-gradient rounded-pill mb-2">Ages {{ course.get_age_group_display }}</div>
+                                {% endif %}
+
+                                <!-- Course Title -->
+                                <a class="text-decoration-none link-dark stretched-link" href="{% url 'course_details' course.pk %}">
+                                    <h5 class="card-title mb-3">{{ course.name }}</h5>
+                                </a>
+
+                                <!-- Course Description -->
+                                <p class="card-text mb-0">{{ course.description|truncatechars:100 }}</p>
+                            </div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="col-12">
+                        <p class="text-center">No courses found matching your criteria.</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+{% endblock %}

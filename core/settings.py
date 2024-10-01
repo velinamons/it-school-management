@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "django_filters",
     "school_management",
 ]
 
@@ -87,7 +88,7 @@ DATABASES = {
 # Password validation
 # https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators
 
-AUTH_USER_MODEL = 'school_management.CustomUser'
+AUTH_USER_MODEL = "school_management.CustomUser"
 
 AUTH_PASSWORD_VALIDATORS = [
     {

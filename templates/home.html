@@ -66,49 +66,35 @@
                 </div>
             </div>
             <div class="row gx-5">
-                <!-- Robot Explorers Course -->
-                <div class="col-lg-4 mb-5">
-                    <div class="card h-100 shadow border-0">
-                        <img class="card-img-top" src="https://dummyimage.com/600x350/ced4da/6c757d" alt="Robot Explorers" />
-                        <div class="card-body p-4">
-                            <div class="badge bg-primary bg-gradient rounded-pill mb-2">Beginner</div>
-                            <div class="badge bg-primary2 bg-gradient rounded-pill mb-2">Ages 6-8</div>
-                            <a class="text-decoration-none link-dark stretched-link" href="#!">
-                                <h5 class="card-title mb-3">Robot Explorers</h5>
-                            </a>
-                            <p class="card-text mb-0">An introductory course focusing on fun, hands-on activities with simple robots and block-based programming tools like Scratch.</p>
-                        </div>
-                    </div>
-                </div>
-                <!-- Junior Robotics Innovators Course -->
-                <div class="col-lg-4 mb-5">
-                    <div class="card h-100 shadow border-0">
-                        <img class="card-img-top" src="https://dummyimage.com/600x350/adb5bd/495057" alt="Junior Robotics Innovators" />
-                        <div class="card-body p-4">
-                            <div class="badge bg-primary bg-gradient rounded-pill mb-2">Intermediate</div>
-                            <div class="badge bg-primary2 bg-gradient rounded-pill mb-2">Ages 9-12</div>
-                            <a class="text-decoration-none link-dark stretched-link" href="#!">
-                                <h5 class="card-title mb-3">Junior Robotics Innovators</h5>
-                            </a>
-                            <p class="card-text mb-0">This course teaches robotics and basic programming through exciting, hands-on projects using beginner-friendly tools.</p>
-                        </div>
-                    </div>
-                </div>
-                <!-- Teen Robotics Fundamentals Course -->
-                <div class="col-lg-4 mb-5">
-                    <div class="card h-100 shadow border-0">
-                        <img class="card-img-top" src="https://dummyimage.com/600x350/6c757d/343a40" alt="Teen Robotics Fundamentals" />
-                        <div class="card-body p-4">
-                            <div class="badge bg-primary bg-gradient rounded-pill mb-2">Intermediate</div>
-                            <div class="badge bg-primary2 bg-gradient rounded-pill mb-2">Ages 13-15</div>
-                            <a class="text-decoration-none link-dark stretched-link" href="#!">
-                                <h5 class="card-title mb-3">Teen Robotics Fundamentals</h5>
-                            </a>
-                            <p class="card-text mb-0">This course covers robotics mechanics, programming, and electronics, preparing students for more complex projects.</p>
-                        </div>
-                    </div>
-                </div>
+    <!-- Loop through the courses passed from the view -->
+    {% for course in courses %}
+    <div class="col-lg-4 mb-5">
+        <div class="card h-100 shadow border-0">
+            <img class="card-img-top" src="https://dummyimage.com/600x350/f0f3f9/0011ff&text=++{{ course.name }}" alt="{{ course.name }}" />
+            <div class="card-body p-4">
+                <!-- Experience Badges -->
+                {% for exp in course.experience.all %}
+                    <div class="badge bg-primary bg-gradient rounded-pill mb-2">{{ exp.name }}</div>
+                {% endfor %}
+
+                <!-- Age Group Badge -->
+                {% if course.age_group %}
+                    <div class="badge bg-primary2 bg-gradient rounded-pill mb-2">Ages {{ course.get_age_group_display }}</div>
+                {% endif %}
+
+                <!-- Course Title -->
+                <a class="text-decoration-none link-dark stretched-link" href="{% url 'course_details' course.pk %}">
+                    <h5 class="card-title mb-3">{{ course.name }}</h5>
+                </a>
+
+                <!-- Course Description -->
+                <p class="card-text mb-0">{{ course.description|truncatechars:100 }}</p>
             </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
 
             <div class="row gx-5 justify-content-center">
                 <div class="col-lg-8 col-xl-6">

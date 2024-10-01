@@ -20,3 +20,6 @@ db.sqlite3
 
 # static files #
 staticfiles/
+
+# mypy
+mypy.ini
