@@ -11,7 +11,7 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 
 document.addEventListener('DOMContentLoaded', function () {
-        const phoneInput = document.querySelector('#id_phone');
+        const phoneInput = document.querySelector('#id_phone_number');
 
         phoneInput.addEventListener('input', function (e) {
             let digits = phoneInput.value.replace(/\D/g, ''); // Only digits

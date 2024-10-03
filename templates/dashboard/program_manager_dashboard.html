@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+
+{% block title %}Program Manager Dashboard{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2>Welcome, {{ user.first_name }}!</h2>
+    <h3>Program Manager Dashboard</h3>
+    <p>Here are the filias you manage:</p>
+    <ul>
+        {% for filia in manager.managed_filias.all %}
+            <li>{{ filia.name }} - {{ filia.city }}</li>
+        {% empty %}
+            <li>You do not manage any filias.</li>
+        {% endfor %}
+    </ul>
+</div>
+{% endblock %}

@@ -1,12 +1,31 @@
 from django.http import HttpRequest, HttpResponse
 from django.shortcuts import render, redirect
 from django.views.decorators.cache import never_cache
-from django.views.generic import ListView, DetailView
+from django.views.generic import ListView, DetailView, TemplateView
 from django_filters.views import FilterView
+from django.utils.decorators import method_decorator
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.auth.decorators import user_passes_test
+from django.contrib.auth.views import LoginView
+from django.contrib.auth.forms import AuthenticationForm
+from django.urls import reverse_lazy
+
 from .filters import CourseFilter
-from .forms import SuggestionForm, ContactForm
-from .models import Course, Filia
 from .course_filtering import select_course
+from .forms import (
+    StudentRegistrationForm,
+    CustomAuthenticationForm,
+    SuggestionForm,
+    ContactForm,
+)
+from .models import Course, Filia
+from .role_checking import (
+    user_is_student,
+    user_is_teacher,
+    user_is_program_manager,
+    user_is_education_manager,
+    get_user_role
+)
 
 
 def home(request: HttpRequest) -> HttpResponse:
@@ -14,23 +33,23 @@ def home(request: HttpRequest) -> HttpResponse:
 
     context = {"courses": courses}
 
-    return render(request, "home.html", context)
+    return render(request, "unauthorized/home.html", context)
 
 
 class FiliaListView(ListView):
-    template_name = "filias.html"
+    template_name = "unauthorized/filias.html"
     context_object_name = "filias"
     queryset = Filia.objects.all().order_by("name")
 
 
 class FiliaDetailView(DetailView):
-    template_name = "filia_details.html"
+    template_name = "unauthorized/filia_details.html"
     context_object_name = "filia"
     queryset = Filia.objects.prefetch_related("groups__filia")
 
 
 class CourseListView(FilterView):
-    template_name = "courses.html"
+    template_name = "unauthorized/courses.html"
     context_object_name = "courses"
     filterset_class = CourseFilter
     paginate_by = None
@@ -38,21 +57,71 @@ class CourseListView(FilterView):
 
 
 class CourseDetailView(DetailView):
-    template_name = "course_details.html"
+    template_name = "unauthorized/course_details.html"
     context_object_name = "course"
     queryset = Course.objects.prefetch_related("experience", "groups__filia")
 
 
 def contact_success(request: HttpRequest) -> HttpResponse:
-    return render(request, "contact_success.html")
+    return render(request, "unauthorized/contact_success.html")
 
 
-def login(request: HttpRequest) -> HttpResponse:
-    return render(request, "authorization/login.html")
+class RoleBasedDashboardView(LoginRequiredMixin, TemplateView):
+    def get(self, request: HttpRequest, *args, **kwargs) -> HttpResponse:
+        user = request.user
+
+        role = get_user_role(user)
+        if role:
+            return redirect(f"{role}_dashboard")
+        else:
+            return redirect("home")
 
 
-def register(request: HttpRequest) -> HttpResponse:
-    return render(request, "authorization/register.html")
+@method_decorator(user_passes_test(user_is_student), name="dispatch")
+class StudentDashboardView(LoginRequiredMixin, TemplateView):
+    template_name = "dashboard/student_dashboard.html"
+
+
+@method_decorator(user_passes_test(user_is_teacher), name="dispatch")
+class TeacherDashboardView(LoginRequiredMixin, TemplateView):
+    template_name = "dashboard/teacher_dashboard.html"
+
+
+@method_decorator(user_passes_test(user_is_education_manager), name="dispatch")
+class EducationManagerDashboardView(LoginRequiredMixin, TemplateView):
+    template_name = "dashboard/education_manager_dashboard.html"
+
+
+@method_decorator(user_passes_test(user_is_program_manager), name="dispatch")
+class ProgramManagerDashboardView(LoginRequiredMixin, TemplateView):
+    template_name = "dashboard/program_manager_dashboard.html"
+
+
+class CustomLoginView(LoginView):
+    authentication_form = CustomAuthenticationForm
+    template_name = "registration/login.html"
+
+    def form_valid(self, form: AuthenticationForm) -> HttpResponse:
+        remember = form.cleaned_data.get("remember")
+        if not remember:
+            self.request.session.set_expiry(0)
+            self.request.session.modified = True
+        return super().form_valid(form)
+
+    def get_success_url(self) -> str:
+        return reverse_lazy("role_based_dashboard")
+
+
+def register_student(request: HttpRequest) -> HttpResponse:
+    if request.method == "POST":
+        form = StudentRegistrationForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect("login")
+    else:
+        form = StudentRegistrationForm()
+
+    return render(request, "registration/register.html", {"form": form})
 
 
 @never_cache
@@ -68,7 +137,7 @@ def course_quiz(request: HttpRequest) -> HttpResponse:
     else:
         form = SuggestionForm()
 
-    return render(request, "course_quiz.html", {"form": form})
+    return render(request, "unauthorized/course_quiz.html", {"form": form})
 
 
 @never_cache
@@ -108,7 +177,7 @@ def contact_with_quiz(request: HttpRequest) -> HttpResponse:
 
     return render(
         request,
-        "contact_with_quiz.html",
+        "unauthorized/contact_with_quiz.html",
         {
             "form": form,
             "suggested_course": suggested_course_name,

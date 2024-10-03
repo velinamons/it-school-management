@@ -1,7 +1,66 @@
+from typing import Any
 from django import forms
-from .models import ContactMessage, Experience, Goal
-from django.core.exceptions import ValidationError
+from django.contrib.auth.forms import UserCreationForm
+from django.contrib.auth.forms import AuthenticationForm
 from .enums import AgeGroup
+from .models import Student, ContactMessage, Experience, Goal
+
+
+class StudentRegistrationForm(UserCreationForm):
+    password1 = forms.CharField(
+        label="Password",
+        widget=forms.PasswordInput(attrs={"class": "form-control"})
+    )
+    password2 = forms.CharField(
+        label="Confirm Password",
+        widget=forms.PasswordInput(attrs={"class": "form-control"})
+    )
+
+    class Meta:
+        model = Student
+        fields = ["email", "first_name", "last_name", "phone_number", "password1", "password2"]
+        widgets = {
+            "email": forms.EmailInput(attrs={"class": "form-control"}),
+            "first_name": forms.TextInput(attrs={"class": "form-control"}),
+            "last_name": forms.TextInput(attrs={"class": "form-control"}),
+            "phone_number": forms.TextInput(attrs={"class": "form-control"}),
+        }
+
+    def clean(self) -> None:
+        cleaned_data = super().clean()
+        password1 = cleaned_data.get("password1")
+        password2 = cleaned_data.get("password2")
+
+        if password1 and password2:
+            if password1 != password2:
+                self.add_error("password2", "Passwords do not match.")
+
+    def save(self, commit: bool = True) -> Student:
+        user = super().save(commit=False)
+        if commit:
+            user.save()
+        return user
+
+
+class CustomAuthenticationForm(AuthenticationForm):
+    username = forms.EmailField(
+        label="Email",
+        max_length=254,
+        widget=forms.EmailInput(attrs={'class': 'form-control', 'autofocus': True}),
+    )
+    password = forms.CharField(
+        label="Password",
+        strip=False,
+        widget=forms.PasswordInput(attrs={'class': 'form-control'}),
+    )
+    remember = forms.BooleanField(required=False, widget=forms.CheckboxInput(attrs={'class': 'form-check-input'}))
+
+    def confirm_login_allowed(self, user: Any) -> None:
+        if not user.is_active:
+            raise forms.ValidationError(
+                "This account is inactive.",
+                code='inactive',
+            )
 
 
 class SuggestionForm(forms.Form):
@@ -36,17 +95,17 @@ class SuggestionForm(forms.Form):
 class ContactForm(forms.ModelForm):
     class Meta:
         model = ContactMessage
-        fields = ["name", "phone", "message", "suggested_course", "suggestion_details"]
+        fields = ["name", "phone_number", "message", "suggested_course", "suggestion_details"]
         labels = {
             "name": "Your Name:",
-            "phone": "Contact Phone Number:",
+            "phone_number": "Contact Phone Number:",
             "message": "Message:",
             "suggested_course": "Suggested Course:",
             "suggestion_details": "Your Suggestion Details:",
         }
         widgets = {
             "name": forms.TextInput(attrs={"class": "form-control"}),
-            "phone": forms.TextInput(attrs={"class": "form-control"}),
+            "phone_number": forms.TextInput(attrs={"class": "form-control"}),
             "message": forms.Textarea(
                 attrs={"class": "form-control", "maxlength": "250", "rows": "5"}
             ),
@@ -57,13 +116,3 @@ class ContactForm(forms.ModelForm):
                 attrs={"class": "form-control", "readonly": True}
             ),
         }
-
-    def clean_phone(self) -> str:
-        phone = self.cleaned_data.get("phone")
-        if phone is None:
-            raise ValidationError("Phone number is required.")
-
-        if len(phone) != 15:
-            raise ValidationError(f"Please enter a valid phone number: {phone}")
-
-        return phone

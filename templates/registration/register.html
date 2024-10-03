@@ -1,0 +1,116 @@
+{% extends 'base.html' %}
+
+{% block title %}Register - Create Account{% endblock %}
+
+{% block content %}
+<section class="py-5">
+    <div class="container px-5 my-3">
+        <div class="text-center my-3">
+            <h1 class="fw-bolder mb-2">Create Your Account</h1>
+            <p class="lead fw-normal text-muted mb-3">Fill out the form to register for an account</p>
+        </div>
+{% if messages %}
+    <div>
+        {% for message in messages %}
+            <div class="alert alert-info">{{ message }}</div>
+        {% endfor %}
+    </div>
+{% endif %}
+    
+        <div class="bg-light rounded-3 py-5 px-5 px-md-5 mb-5 custom-margin">
+            <div class="row gx-6 justify-content-center">
+                <div class="col-lg-8 col-xl-11">
+                    <form method="POST" id="registerForm" novalidate>
+                        {% csrf_token %}
+
+                        <!-- First Name -->
+                        <div class="mb-3">
+                            <label class="form-label">{{ form.first_name.label }}</label>
+                            <div class="center-input">
+                                {{ form.first_name }}
+                            </div>
+                            <div class="invalid-feedback d-block">
+                                {% if form.first_name.errors %}
+                                    {{ form.first_name.errors }}
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Last Name -->
+                        <div class="mb-3">
+                            <label class="form-label">{{ form.last_name.label }}</label>
+                            <div class="center-input">
+                                {{ form.last_name }}
+                            </div>
+                            <div class="invalid-feedback d-block">
+                                {% if form.last_name.errors %}
+                                    {{ form.last_name.errors }}
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Email -->
+                        <div class="mb-3">
+                            <label class="form-label">{{ form.email.label }}</label>
+                            <div class="center-input">
+                                {{ form.email }}
+                            </div>
+                            <div class="invalid-feedback d-block">
+                                {% if form.email.errors %}
+                                    {{ form.email.errors }}
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Phone Number -->
+                        <div class="mb-3">
+                            <label class="form-label">{{ form.phone_number.label }}</label>
+                            <div class="center-input">
+                                <span class="input-group-text">+38</span>
+                                {{ form.phone_number }}
+                            </div>
+                            <div class="invalid-feedback d-block">
+                                {% if form.phone_number.errors %}
+                                    {{ form.phone_number.errors }}
+                                {% endif %}
+                            </div>
+                            </div>
+    
+      <!-- Password -->
+<div class="mb-3">
+    <label class="form-label">{{ form.password1.label }}</label>
+    <div class="center-input">
+        {{ form.password1 }}
+    </div>
+    <div class="invalid-feedback d-block">
+        {% if form.password1.errors %}
+            {{ form.password1.errors }}
+        {% endif %}
+    </div>
+</div>
+
+<!-- Confirm Password -->
+<div class="mb-3">
+    <label class="form-label">{{ form.password2.label }}</label>
+    <div class="center-input">
+        {{ form.password2 }}
+    </div>
+    <div class="invalid-feedback d-block">
+        {% if form.password2.errors %}
+            {{ form.password2.errors }}
+        {% endif %}
+    </div>
+</div>
+
+
+                        <!-- Submit Button -->
+                        <div class="text-center">
+                            <button type="submit" id="submitBtn" class="btn btn-primary btn-lg px-4 me-sm-3">Create Account</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

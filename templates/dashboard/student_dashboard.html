@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+
+{% block title %}Student Dashboard{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2>Welcome, {{ user.first_name }}!</h2>
+    <h3>Student Dashboard</h3>
+    <p>Here are your enrolled groups:</p>
+    <ul>
+        {% for group in student.student_groups.all %}
+            <li>{{ group.name }} - {{ group.course.name }}</li>
+        {% empty %}
+            <li>You are not enrolled in any groups.</li>
+        {% endfor %}
+    </ul>
+</div>
+{% endblock %}
