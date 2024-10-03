@@ -4,8 +4,8 @@ from django.views.decorators.cache import never_cache
 from django.views.generic import ListView, DetailView, TemplateView
 from django_filters.views import FilterView
 from django.utils.decorators import method_decorator
-from django.contrib.auth.mixins import LoginRequiredMixin
-from django.contrib.auth.decorators import user_passes_test
+from django.contrib.auth import logout
+from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth.views import LoginView
 from django.contrib.auth.forms import AuthenticationForm
 from django.urls import reverse_lazy
@@ -66,34 +66,35 @@ def contact_success(request: HttpRequest) -> HttpResponse:
     return render(request, "unauthorized/contact_success.html")
 
 
-class RoleBasedDashboardView(LoginRequiredMixin, TemplateView):
+@method_decorator(login_required, name='dispatch')
+class RoleBasedDashboardView(TemplateView):
     def get(self, request: HttpRequest, *args, **kwargs) -> HttpResponse:
         user = request.user
-
         role = get_user_role(user)
+
         if role:
             return redirect(f"{role}_dashboard")
-        else:
-            return redirect("home")
+
+        return redirect("home")
 
 
-@method_decorator(user_passes_test(user_is_student), name="dispatch")
-class StudentDashboardView(LoginRequiredMixin, TemplateView):
+@method_decorator([login_required, user_passes_test(user_is_student)], name="dispatch")
+class StudentDashboardView(TemplateView):
     template_name = "dashboard/student_dashboard.html"
 
 
-@method_decorator(user_passes_test(user_is_teacher), name="dispatch")
-class TeacherDashboardView(LoginRequiredMixin, TemplateView):
+@method_decorator([login_required, user_passes_test(user_is_teacher)], name="dispatch")
+class TeacherDashboardView(TemplateView):
     template_name = "dashboard/teacher_dashboard.html"
 
 
-@method_decorator(user_passes_test(user_is_education_manager), name="dispatch")
-class EducationManagerDashboardView(LoginRequiredMixin, TemplateView):
+@method_decorator([login_required, user_passes_test(user_is_education_manager)], name="dispatch")
+class EducationManagerDashboardView(TemplateView):
     template_name = "dashboard/education_manager_dashboard.html"
 
 
-@method_decorator(user_passes_test(user_is_program_manager), name="dispatch")
-class ProgramManagerDashboardView(LoginRequiredMixin, TemplateView):
+@method_decorator([login_required, user_passes_test(user_is_program_manager)], name="dispatch")
+class ProgramManagerDashboardView(TemplateView):
     template_name = "dashboard/program_manager_dashboard.html"
 
 
@@ -122,6 +123,15 @@ def register_student(request: HttpRequest) -> HttpResponse:
         form = StudentRegistrationForm()
 
     return render(request, "registration/register.html", {"form": form})
+
+
+@login_required
+def logout_view(request: HttpRequest) -> HttpResponse:
+    if request.method == "POST":
+        logout(request)
+        return redirect('home')
+
+    return render(request, 'registration/logout_confirmation.html')
 
 
 @never_cache

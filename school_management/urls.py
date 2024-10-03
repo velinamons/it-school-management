@@ -12,6 +12,7 @@ urlpatterns = [
     path("contact-success/", views.contact_success, name="contact_success"),
     path("login/", views.CustomLoginView.as_view(), name="login"),
     path("register/", views.register_student, name="register"),
+    path("logout/", views.logout_view, name="logout"),
     path(
         "dashboard/student/",
         views.StudentDashboardView.as_view(),

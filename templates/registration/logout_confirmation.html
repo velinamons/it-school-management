@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+
+{% block title %}Are You Sure You Want to Log Out?{% endblock %}
+
+{% block content %}
+    <section class="py-5">
+        <div class="container px-5 my-3">
+            <div class="bg-light rounded-3 py-5 px-5 px-md-5 mb-5 custom-margin">
+                <div class="row gx-6 justify-content-center">
+                    <div class="text-center my-3">
+                        <h1 class="fw-bolder mb-2">Are You Sure?</h1>
+                        <p class="lead fw-normal text-muted mb-3">Do you really want to log out?<br>You will be redirected to the login page.</p>
+                        
+                        <!-- Logout form -->
+                        <form method="post">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-danger btn-lg px-4 me-sm-3">Log Out</button>
+                            <a href="javascript:history.back()" class="btn btn-secondary btn-lg px-4 me-sm-3">Previous Page</a>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+{% endblock %}
