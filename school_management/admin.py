@@ -1,5 +1,67 @@
 from django.contrib import admin
+from django.contrib.auth.admin import UserAdmin
 from .models import Filia, Course, Group, Student, Teacher, Manager, Experience, Goal
+
+
+class BaseUserAdmin(UserAdmin):
+    list_display = ("email", "first_name", "last_name", "is_active")
+    search_fields = ("email", "first_name", "last_name")
+    ordering = ("last_name",)
+    exclude = ("groups", "user_permissions")
+
+    fieldsets = (
+        (None, {"fields": ("email", "password")}),
+        ("Personal info", {"fields": ("first_name", "last_name", "phone_number")}),
+        ("Permissions", {"fields": ("is_active",)}),
+    )
+    add_fieldsets = (
+        (
+            None,
+            {
+                "classes": ("wide",),
+                "fields": ("email", "password1", "password2"),
+            },
+        ),
+    )
+
+
+@admin.register(Student)
+class StudentAdmin(BaseUserAdmin):
+    fieldsets = BaseUserAdmin.fieldsets + (
+        ("Teacher Details", {"fields": ("student_groups",)}),
+    )
+    list_display = BaseUserAdmin.list_display + ("student_groups_list",)
+    filter_horizontal = ("student_groups",)
+
+    @admin.display(description="Teacher Groups")
+    def student_groups_list(self, obj):
+        return ", ".join([filia.name for filia in obj.student_groups.all()])
+
+
+@admin.register(Teacher)
+class TeacherAdmin(BaseUserAdmin):
+    fieldsets = BaseUserAdmin.fieldsets + (
+        ("Teacher Details", {"fields": ("teacher_groups",)}),
+    )
+    list_display = BaseUserAdmin.list_display + ("teacher_groups_list",)
+    filter_horizontal = ("teacher_groups",)
+
+    @admin.display(description="Teacher Groups")
+    def teacher_groups_list(self, obj):
+        return ", ".join([filia.name for filia in obj.teacher_groups.all()])
+
+
+@admin.register(Manager)
+class ManagerAdmin(BaseUserAdmin):
+    fieldsets = BaseUserAdmin.fieldsets + (
+        ("Manager Details", {"fields": ("role", "managed_filias")}),
+    )
+    list_display = BaseUserAdmin.list_display + ("managed_filia_list",)
+    filter_horizontal = ("managed_filias",)
+
+    @admin.display(description="Managed Filias")
+    def managed_filia_list(self, obj):
+        return ", ".join([filia.name for filia in obj.managed_filias.all()])
 
 
 @admin.register(Filia)
@@ -39,68 +101,3 @@ class GroupAdmin(admin.ModelAdmin):
     list_display = ("name", "course", "filia")
     list_filter = ("course", "filia")
     search_fields = ("name",)
-
-
-@admin.register(Student)
-class StudentAdmin(admin.ModelAdmin):
-    fields = (
-        "email",
-        "password",
-        "first_name",
-        "last_name",
-        "phone_number",
-        "is_active",
-        "student_groups",
-    )
-
-    exclude = ("is_staff", "last_login", "is_superuser", "groups", "user_permissions")
-    list_display = ("email", "first_name", "last_name", "is_active")
-    search_fields = ("email", "first_name", "last_name")
-    ordering = ("last_name",)
-
-
-@admin.register(Teacher)
-class TeacherAdmin(admin.ModelAdmin):
-    fields = (
-        "email",
-        "password",
-        "first_name",
-        "last_name",
-        "phone_number",
-        "is_active",
-        "teacher_groups",
-    )
-    exclude = ("is_staff", "last_login", "is_superuser", "groups", "user_permissions")
-    list_display = ("email", "first_name", "last_name", "is_active")
-    search_fields = ("email", "first_name", "last_name")
-    ordering = ("last_name",)
-
-
-@admin.register(Manager)
-class ManagerAdmin(admin.ModelAdmin):
-    list_display = (
-        "email",
-        "first_name",
-        "last_name",
-        "role",
-        "is_active",
-        "managed_filia_list",
-    )
-    list_filter = ("role", "is_active")
-    search_fields = ("email", "first_name", "last_name", "managed_filias__name")
-    filter_horizontal = ("managed_filias",)
-    fields = (
-        "email",
-        "password",
-        "first_name",
-        "last_name",
-        "phone_number",
-        "role",
-        "is_active",
-        "managed_filias",
-    )
-    exclude = ("is_staff", "last_login", "is_superuser", "groups", "user_permissions")
-
-    @admin.display(description="Managed Filias")
-    def managed_filia_list(self, obj):
-        return ", ".join([filia.name for filia in obj.managed_filias.all()])

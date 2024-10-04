@@ -1,7 +1,6 @@
 from typing import Any
 from django import forms
-from django.contrib.auth.forms import UserCreationForm
-from django.contrib.auth.forms import AuthenticationForm
+from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from school_management.utils.enums import AgeGroup
 from .models import Student, ContactMessage, Experience, Goal
 
