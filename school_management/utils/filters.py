@@ -1,6 +1,6 @@
 import django_filters
 from django.forms.widgets import CheckboxSelectMultiple
-from .models import Course, Experience, Filia
+from school_management.models import Course, Experience, Filia
 
 
 class CourseFilter(django_filters.FilterSet):

@@ -10,16 +10,16 @@ from django.contrib.auth.views import LoginView
 from django.contrib.auth.forms import AuthenticationForm
 from django.urls import reverse_lazy
 
-from .filters import CourseFilter
-from .course_filtering import select_course
+from .models import Course, Filia
+from school_management.utils.filters import CourseFilter
+from school_management.utils.course_filtering import select_course
 from .forms import (
     StudentRegistrationForm,
     CustomAuthenticationForm,
     SuggestionForm,
     ContactForm,
 )
-from .models import Course, Filia
-from .role_checking import (
+from school_management.utils.role_checking import (
     user_is_student,
     user_is_teacher,
     user_is_program_manager,

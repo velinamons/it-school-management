@@ -1,5 +1,5 @@
 from django.db.models import QuerySet
-from .models import Course
+from school_management.models import Course
 
 
 def filter_courses_by_age(
