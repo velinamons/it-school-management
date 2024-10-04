@@ -67,6 +67,9 @@ TEMPLATES = [
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
             ],
+            "libraries": {
+                "role_tags": "school_management.templatetags.role_tags"
+            }
         },
     },
 ]

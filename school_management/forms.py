@@ -46,20 +46,20 @@ class CustomAuthenticationForm(AuthenticationForm):
     username = forms.EmailField(
         label="Email",
         max_length=254,
-        widget=forms.EmailInput(attrs={'class': 'form-control', 'autofocus': True}),
+        widget=forms.EmailInput(attrs={"class": "form-control", "autofocus": True}),
     )
     password = forms.CharField(
         label="Password",
         strip=False,
-        widget=forms.PasswordInput(attrs={'class': 'form-control'}),
+        widget=forms.PasswordInput(attrs={"class": "form-control"}),
     )
-    remember = forms.BooleanField(required=False, widget=forms.CheckboxInput(attrs={'class': 'form-check-input'}))
+    remember = forms.BooleanField(required=False, widget=forms.CheckboxInput(attrs={"class": "form-check-input"}))
 
     def confirm_login_allowed(self, user: Any) -> None:
         if not user.is_active:
             raise forms.ValidationError(
                 "This account is inactive.",
-                code='inactive',
+                code="inactive",
             )
 
 

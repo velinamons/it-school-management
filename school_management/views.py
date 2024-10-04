@@ -66,7 +66,7 @@ def contact_success(request: HttpRequest) -> HttpResponse:
     return render(request, "unauthorized/contact_success.html")
 
 
-@method_decorator(login_required, name='dispatch')
+@method_decorator(login_required, name="dispatch")
 class RoleBasedDashboardView(TemplateView):
     def get(self, request: HttpRequest, *args, **kwargs) -> HttpResponse:
         user = request.user
@@ -129,9 +129,9 @@ def register_student(request: HttpRequest) -> HttpResponse:
 def logout_view(request: HttpRequest) -> HttpResponse:
     if request.method == "POST":
         logout(request)
-        return redirect('home')
+        return redirect("home")
 
-    return render(request, 'registration/logout_confirmation.html')
+    return render(request, "registration/logout_confirmation.html")
 
 
 @never_cache
