@@ -1,4 +1,4 @@
-from django.http import HttpRequest, HttpResponse
+from django.http import HttpRequest, HttpResponse, Http404
 from django.shortcuts import render, redirect
 from django.views.decorators.cache import never_cache
 from django.views.generic import ListView, DetailView, TemplateView
@@ -34,68 +34,6 @@ def home(request: HttpRequest) -> HttpResponse:
     context = {"courses": courses}
 
     return render(request, "unauthorized/home.html", context)
-
-
-class FiliaListView(ListView):
-    template_name = "unauthorized/filias.html"
-    context_object_name = "filias"
-    queryset = Filia.objects.all().order_by("name")
-
-
-class FiliaDetailView(DetailView):
-    template_name = "unauthorized/filia_details.html"
-    context_object_name = "filia"
-    queryset = Filia.objects.prefetch_related("groups__filia")
-
-
-class CourseListView(FilterView):
-    template_name = "unauthorized/courses.html"
-    context_object_name = "courses"
-    filterset_class = CourseFilter
-    paginate_by = None
-    queryset = Course.objects.prefetch_related("experience", "groups__filia").distinct()
-
-
-class CourseDetailView(DetailView):
-    template_name = "unauthorized/course_details.html"
-    context_object_name = "course"
-    queryset = Course.objects.prefetch_related("experience", "groups__filia")
-
-
-def contact_success(request: HttpRequest) -> HttpResponse:
-    return render(request, "unauthorized/contact_success.html")
-
-
-@method_decorator(login_required, name="dispatch")
-class RoleBasedDashboardView(TemplateView):
-    def get(self, request: HttpRequest, *args, **kwargs) -> HttpResponse:
-        user = request.user
-        role = get_user_role(user)
-
-        if role:
-            return redirect(f"{role}_dashboard")
-
-        return redirect("home")
-
-
-@method_decorator([login_required, user_passes_test(user_is_student)], name="dispatch")
-class StudentDashboardView(TemplateView):
-    template_name = "dashboard/student_dashboard.html"
-
-
-@method_decorator([login_required, user_passes_test(user_is_teacher)], name="dispatch")
-class TeacherDashboardView(TemplateView):
-    template_name = "dashboard/teacher_dashboard.html"
-
-
-@method_decorator([login_required, user_passes_test(user_is_education_manager)], name="dispatch")
-class EducationManagerDashboardView(TemplateView):
-    template_name = "dashboard/education_manager_dashboard.html"
-
-
-@method_decorator([login_required, user_passes_test(user_is_program_manager)], name="dispatch")
-class ProgramManagerDashboardView(TemplateView):
-    template_name = "dashboard/program_manager_dashboard.html"
 
 
 class CustomLoginView(LoginView):
@@ -134,6 +72,38 @@ def logout_view(request: HttpRequest) -> HttpResponse:
     return render(request, "registration/logout_confirmation.html")
 
 
+@method_decorator(login_required, name="dispatch")
+class RoleBasedDashboardView(TemplateView):
+    def get(self, request: HttpRequest, *args, **kwargs) -> HttpResponse:
+        user = request.user
+        role = get_user_role(user)
+
+        if role:
+            return redirect(f"{role}_dashboard")
+
+        return redirect("home")
+
+
+@method_decorator([login_required, user_passes_test(user_is_student)], name="dispatch")
+class StudentDashboardView(TemplateView):
+    template_name = "dashboard/student_dashboard.html"
+
+
+@method_decorator([login_required, user_passes_test(user_is_teacher)], name="dispatch")
+class TeacherDashboardView(TemplateView):
+    template_name = "dashboard/teacher_dashboard.html"
+
+
+@method_decorator([login_required, user_passes_test(user_is_education_manager)], name="dispatch")
+class EducationManagerDashboardView(TemplateView):
+    template_name = "dashboard/education_manager_dashboard.html"
+
+
+@method_decorator([login_required, user_passes_test(user_is_program_manager)], name="dispatch")
+class ProgramManagerDashboardView(TemplateView):
+    template_name = "dashboard/program_manager_dashboard.html"
+
+
 @never_cache
 def course_quiz(request: HttpRequest) -> HttpResponse:
     if request.method == "POST":
@@ -148,6 +118,36 @@ def course_quiz(request: HttpRequest) -> HttpResponse:
         form = SuggestionForm()
 
     return render(request, "unauthorized/course_quiz.html", {"form": form})
+
+
+class FiliaListView(ListView):
+    template_name = "unauthorized/filias.html"
+    context_object_name = "filias"
+    queryset = Filia.objects.all().order_by("name")
+
+
+class FiliaDetailView(DetailView):
+    template_name = "unauthorized/filia_details.html"
+    context_object_name = "filia"
+    queryset = Filia.objects.prefetch_related("groups__filia")
+
+
+class CourseListView(FilterView):
+    template_name = "unauthorized/courses.html"
+    context_object_name = "courses"
+    filterset_class = CourseFilter
+    paginate_by = None
+    queryset = Course.objects.prefetch_related("experience", "groups__filia").distinct()
+
+
+class CourseDetailView(DetailView):
+    template_name = "unauthorized/course_details.html"
+    context_object_name = "course"
+    queryset = Course.objects.prefetch_related("experience", "groups__filia")
+
+
+def contact_success(request: HttpRequest) -> HttpResponse:
+    return render(request, "unauthorized/contact_success.html")
 
 
 @never_cache
@@ -194,3 +194,15 @@ def contact_with_quiz(request: HttpRequest) -> HttpResponse:
             "suggestion_details": suggestion_details,
         },
     )
+
+
+def custom_404(request: HttpRequest, exception: Http404) -> HttpResponse:
+    return render(request, 'errors/404.html', status=404)
+
+
+def custom_500(request: HttpRequest) -> HttpResponse:
+    return render(request, 'errors/500.html', status=500)
+
+
+def custom_401(request: HttpRequest, exception: None) -> HttpResponse:
+    return render(request, 'errors/401.html', status=401)

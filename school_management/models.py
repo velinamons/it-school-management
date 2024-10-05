@@ -6,6 +6,7 @@ from django.contrib.auth.models import (
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 from school_management.utils.enums import AgeGroup, ContactMessageStatus, ManagerRole
+from .utils.validators import phone_number_validator
 
 
 class CustomUserManager(BaseUserManager):
@@ -34,7 +35,12 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     email = models.EmailField(_("Email address"), unique=True)
     first_name = models.CharField(_("First name"), max_length=150, blank=False)
     last_name = models.CharField(_("Last name"), max_length=150, blank=False)
-    phone_number = models.CharField(_("Phone number"), max_length=15, blank=False)
+    phone_number = models.CharField(
+        _("Phone number"),
+        max_length=15,
+        validators=[phone_number_validator],
+        blank=False,
+    )
 
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
@@ -52,14 +58,18 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
 
 
 class Student(CustomUser):
-    student_groups = models.ManyToManyField("Group", related_name="students", blank=True)
+    student_groups = models.ManyToManyField(
+        "Group", related_name="students", blank=True
+    )
 
     def __str__(self):
         return f"{self.first_name} {self.last_name}"
 
 
 class Teacher(CustomUser):
-    teacher_groups = models.ManyToManyField("Group", related_name="teachers", blank=True)
+    teacher_groups = models.ManyToManyField(
+        "Group", related_name="teachers", blank=True
+    )
 
     def __str__(self):
         return f"{self.first_name} {self.last_name}"
@@ -73,7 +83,9 @@ class Manager(CustomUser):
         blank=True,
         help_text="Specify the manager role.",
     )
-    managed_filias = models.ManyToManyField("Filia", related_name="managers", blank=True)
+    managed_filias = models.ManyToManyField(
+        "Filia", related_name="managers", blank=True
+    )
 
     def __str__(self):
         role_display = dict(ManagerRole.choices()).get(self.role, "Manager")

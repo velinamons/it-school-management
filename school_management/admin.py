@@ -24,16 +24,19 @@ class BaseUserAdmin(UserAdmin):
         ),
     )
 
+    class Media:
+        js = ("js/scripts.js",)
+
 
 @admin.register(Student)
 class StudentAdmin(BaseUserAdmin):
     fieldsets = BaseUserAdmin.fieldsets + (
-        ("Teacher Details", {"fields": ("student_groups",)}),
+        ("Student Details", {"fields": ("student_groups",)}),
     )
     list_display = BaseUserAdmin.list_display + ("student_groups_list",)
     filter_horizontal = ("student_groups",)
 
-    @admin.display(description="Teacher Groups")
+    @admin.display(description="Student Groups")
     def student_groups_list(self, obj):
         return ", ".join([filia.name for filia in obj.student_groups.all()])
 
@@ -56,7 +59,7 @@ class ManagerAdmin(BaseUserAdmin):
     fieldsets = BaseUserAdmin.fieldsets + (
         ("Manager Details", {"fields": ("role", "managed_filias")}),
     )
-    list_display = BaseUserAdmin.list_display + ("managed_filia_list",)
+    list_display = BaseUserAdmin.list_display + ("role", "managed_filia_list")
     filter_horizontal = ("managed_filias",)
 
     @admin.display(description="Managed Filias")
