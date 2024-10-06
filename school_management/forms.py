@@ -2,7 +2,7 @@ from typing import Any
 from django import forms
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from school_management.utils.enums import AgeGroup
-from .models import Student, ContactMessage, Experience, Goal
+from .models import Student, ContactMessage, Experience, Goal, Course, Group
 
 
 class StudentRegistrationForm(UserCreationForm):
@@ -60,6 +60,38 @@ class CustomAuthenticationForm(AuthenticationForm):
                 "This account is inactive.",
                 code="inactive",
             )
+
+
+class CourseForm(forms.ModelForm):
+    class Meta:
+        model = Course
+        fields = ["name", "description", "age_group", "experience", "goals"]
+        labels = {
+            "name": "Course Name:",
+            "description": "Description:",
+            "age_group": "Age Group:",
+            "experience": "Experience:",
+            "goals": "Goals:",
+        }
+        widgets = {
+            "name": forms.TextInput(attrs={"class": "form-control"}),
+            "description": forms.Textarea(attrs={"class": "form-control", "rows": 3}),
+            "age_group": forms.Select(attrs={"class": "form-control"}),
+            "experience": forms.CheckboxSelectMultiple(attrs={"class": "form-check-inline"}),
+            "goals": forms.CheckboxSelectMultiple(attrs={"class": "form-check-inline"}),
+        }
+
+
+class GroupForm(forms.ModelForm):
+    class Meta:
+        model = Group
+        fields = ["name", "course", "filia"]
+
+        widgets = {
+            "name": forms.TextInput(attrs={"class": "form-control", "placeholder": "Enter group name"}),
+            "course": forms.Select(attrs={"class": "form-select"}),
+            "filia": forms.Select(attrs={"class": "form-select"}),
+        }
 
 
 class SuggestionForm(forms.Form):

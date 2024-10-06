@@ -57,14 +57,9 @@ class TeacherAdmin(BaseUserAdmin):
 @admin.register(Manager)
 class ManagerAdmin(BaseUserAdmin):
     fieldsets = BaseUserAdmin.fieldsets + (
-        ("Manager Details", {"fields": ("role", "managed_filias")}),
+        ("Manager Details", {"fields": ("role", )}),
     )
-    list_display = BaseUserAdmin.list_display + ("role", "managed_filia_list")
-    filter_horizontal = ("managed_filias",)
-
-    @admin.display(description="Managed Filias")
-    def managed_filia_list(self, obj):
-        return ", ".join([filia.name for filia in obj.managed_filias.all()])
+    list_display = BaseUserAdmin.list_display + ("role",)
 
 
 @admin.register(Filia)

@@ -14,6 +14,11 @@ urlpatterns = [
     path("register/", views.register_student, name="register"),
     path("logout/", views.logout_view, name="logout"),
     path(
+        "dashboard/",
+        views.RoleBasedDashboardView.as_view(),
+        name="role_based_dashboard",
+    ),
+    path(
         "dashboard/student/",
         views.StudentDashboardView.as_view(),
         name="student_dashboard",
@@ -34,8 +39,48 @@ urlpatterns = [
         name="program_manager_dashboard",
     ),
     path(
-        "dashboard/",
-        views.RoleBasedDashboardView.as_view(),
-        name="role_based_dashboard",
+        "dashboard/program-manager/manage_courses/",
+        views.ManageCoursesView.as_view(),
+        name="manage_courses",
+    ),
+    path(
+        "dashboard/program-manager/manage_courses/<int:pk>/change/",
+        views.ManageCourseChangeView.as_view(),
+        name="change_course",
+    ),
+    path(
+        "dashboard/program-manager/manage_courses/add/",
+        views.ManageCourseAddView.as_view(),
+        name="add_course",
+    ),
+    path(
+        "dashboard/program-manager/manage_courses/<int:pk>/delete/",
+        views.ManageCourseDeleteView.as_view(),
+        name="delete_course",
+    ),
+    path(
+        "dashboard/program-manager/manage_groups/",
+        views.ManageGroupsView.as_view(),
+        name="manage_groups",
+    ),
+    path(
+        "dashboard/program-manager/manage_groups/add/",
+        views.ManageGroupAddView.as_view(),
+        name="add_group",
+    ),
+    path(
+        "dashboard/program-manager/manage_groups/<int:pk>/change/",
+        views.ManageGroupChangeView.as_view(),
+        name="change_group",
+    ),
+    path(
+        "dashboard/program-manager/manage_groups/<int:pk>/delete/",
+        views.ManageGroupDeleteView.as_view(),
+        name="delete_group",
+    ),
+    path(
+        "operation_success/<str:operation_type>/<str:object_name>/<str:back_url>/",
+        views.OperationSuccessView.as_view(),
+        name="operation_success",
     ),
 ]

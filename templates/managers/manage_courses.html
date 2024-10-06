@@ -1,0 +1,115 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Manage Courses | Program Manager{% endblock %}
+
+{% block content %}
+    <!-- Header section -->
+    <section class="bg-light-darker">
+        <div class="row gx-5 py-5 justify-content-center">
+            <div class="col-lg-12">
+                <div class="text-center">
+                    <h2 class="fw-bolder">Manage Courses</h2>
+                    <a href="{% url 'add_course' %}" class="btn btn-primary">Add Course</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- filter + courses section-->
+    <!-- Filter + Courses Section -->
+    <section class="py-5">
+        <div class="container px-5 my-5">
+            <div class="row gx-5">
+                <!-- Sorting+filters Section -->
+                <div class="col-lg-3 mb-5">
+                    <div class="bg-light p-4 shadow-sm mb-2 rounded">
+                        <h5 class="fw-bold mb-4">Filter & Sort by</h5>
+                        <form method="get">
+                            <!-- Age Filter --> 
+                            <div class="mb-4">
+                                <label class="form-label fw-bold">Age Group</label>
+                                {% for checkbox in filter.form.age_group %}
+                                    <div class="form-check small">
+                                        {{ checkbox.tag }}
+                                        <label class="form-check-label" for="{{ checkbox.id_for_label }}">{{ checkbox.choice_label }}</label>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                            <!-- Experience Filter -->
+                            <div class="mb-4">
+                                <label class="form-label fw-bold">Experience</label>
+                                {% for checkbox in filter.form.experience %}
+                                    <div class="form-check small">
+                                        {{ checkbox.tag }}
+                                        <label class="form-check-label" for="{{ checkbox.id_for_label }}">{{ checkbox.choice_label }}</label>
+                                    </div>
+                                {% endfor %}
+                            </div>
+
+                            <!-- Sorting Options -->
+                            <div class="mb-4">
+                                <label class="form-label fw-bold">Sort by</label>
+                                <select class="form-select" name="sort">
+                                    <option value="name_asc" {% if request.GET.sort == 'name_asc' %}selected{% endif %}>Name (A-Z)</option>
+                                    <option value="name_desc" {% if request.GET.sort == 'name_desc' %}selected{% endif %}>Name (Z-A)</option>
+                                    <option value="newest" {% if request.GET.sort == 'newest' %}selected{% endif %}>Newest</option>
+                                </select>
+                            </div>
+
+                            <button type="submit" class="btn btn-primary w-100">Apply</button>
+                            <a href="{% url 'manage_courses' %}" class="btn btn-secondary w-100 mt-3">Reset</a>
+                        </form>
+                    </div>
+
+                </div>
+
+                <!-- Courses Section -->
+                <div class="col-lg-9">
+                    <div class="row gx-5">
+                        {% for course in courses %}
+                            <div class="col-md-6 col-lg-4 mb-5">
+                                <div class="card h-100 shadow border-0">
+                                    <a href="{% url 'change_course' course.pk %}">
+                                        <img class="card-img-top" src="https://dummyimage.com/600x350/e0e3e8/0011ff&text=++{{ course.name }}" alt="{{ course.name }}" />
+                                    </a>
+                                    <div class="card-body p-4 position-relative">
+                                        <!-- Experience Badges -->
+                                        {% for exp in course.experience.all %}
+                                            <div class="badge bg-primary bg-gradient rounded-pill mb-2">{{ exp.name }}</div>
+                                        {% endfor %}
+
+                                        <!-- Age Group Badge -->
+                                        {% if course.age_group %}
+                                            <div class="badge bg-primary2 bg-gradient rounded-pill mb-2">Ages {{ course.get_age_group_display }}</div>
+                                        {% endif %}
+
+                                        <!-- Course Title (Clickable Link) -->
+                                        <h5 class="card-title mb-3">{{ course.name }}</h5>
+
+                                        <a class="stretched-link" href="{% url 'change_course' course.pk %}"></a>
+
+                                        <!-- Course Description -->
+                                        <p class="card-text mb-0">{{ course.description|truncatechars:100 }}</p>
+                                    </div>
+
+                                    <!-- Manage Buttons (Edit and Delete) -->
+                                    <div class="card-footer d-flex justify-content-between">
+                                        <a href="{% url 'change_course' course.pk %}" class="btn btn-primary">Edit</a>
+                                        <a href="{% url 'delete_course' course.pk %}" class="btn btn-secondary">Delete</a>
+                                    </div>
+                                </div>
+                            </div>
+                        {% empty %}
+                            <div class="col-12">
+                                <p class="text-center">No courses found matching your criteria.</p>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+
+{% endblock %}

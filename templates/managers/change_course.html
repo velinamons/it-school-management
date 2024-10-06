@@ -1,0 +1,95 @@
+{% extends 'base.html' %}
+
+{% block title %}Edit Course{% endblock %}
+
+{% block content %}
+<section class="py-5">
+    <div class="container px-5 my-3">
+        <div class="text-center my-3">
+            <h1 class="fw-bolder mb-2">Edit Course Details</h1>
+            <p class="lead fw-normal text-muted mb-3">Update the information for the selected course</p>
+        </div>
+
+        <div class="bg-light rounded-3 py-5 px-5 px-md-5 mb-5 custom-margin">
+            <div class="row gx-6 justify-content-center">
+                <div class="col-lg-8 col-xl-11">
+                    <form method="POST" id="courseChangeForm" novalidate>
+                        {% csrf_token %}
+
+                        <!-- Course Name -->
+                        <div class="mb-3">
+                            <label class="form-label">{{ form.name.label }}</label>
+                            <div class="center-input">
+                                {{ form.name }}
+                            </div>
+                            <div class="invalid-feedback d-block">
+                                {% if form.name.errors %}
+                                    {{ form.name.errors }}
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Course Description -->
+                        <div class="mb-3">
+                            <label class="form-label">{{ form.description.label }}</label>
+                            <div class="center-input d-flex">
+                                {{ form.description }}
+                            </div>
+                            <div class="invalid-feedback d-block">
+                                {% if form.description.errors %}
+                                    {{ form.description.errors }}
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Age Group -->
+                        <div class="mb-3">
+                            <label class="form-label">{{ form.age_group.label }}</label>
+                            <div class="center-input d-flex">
+                                {{ form.age_group }}
+                            </div>
+                            <div class="invalid-feedback d-block">
+                                {% if form.age_group.errors %}
+                                    {{ form.age_group.errors }}
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Experience -->
+                        <div class="mb-3">
+                            <label class="form-label">{{ form.experience.label }}</label>
+                            <div class="center-input">
+                                {{ form.experience }}
+                            </div>
+                            <div class="invalid-feedback d-block">
+                                {% if form.experience.errors %}
+                                    {{ form.experience.errors }}
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Goals -->
+                        <div class="mb-3">
+                            <label class="form-label">{{ form.goals.label }}</label>
+                            <div class="center-input">
+                                {{ form.goals }}
+                            </div>
+                            <div class="invalid-feedback d-block">
+                                {% if form.goals.errors %}
+                                    {{ form.goals.errors }}
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Submit Button -->
+                        <div class="text-center">
+                            <button type="submit" id="submitBtn" class="btn btn-primary btn-lg px-4 me-sm-3">Save Changes</button>
+                            <a href="{% url "manage_courses" %}" class="btn btn-secondary btn-lg px-4 me-sm-3">Cancel</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

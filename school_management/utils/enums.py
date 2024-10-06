@@ -1,5 +1,5 @@
 from enum import Enum
-
+from typing import List, Tuple
 
 class AgeGroup(Enum):
     JUNIOR = "6-8", "6-8 y.o."
@@ -8,7 +8,7 @@ class AgeGroup(Enum):
     OLDER_TEEN = "16-18", "16-18 y.o."
 
     @classmethod
-    def choices(cls):
+    def choices(cls) -> List[Tuple[str, str]]:
         return [(item.value[0], item.value[1]) for item in cls]
 
 
@@ -18,7 +18,7 @@ class ContactMessageStatus(Enum):
     CMP = "Completed"
 
     @classmethod
-    def choices(cls):
+    def choices(cls) -> List[Tuple[str, str]]:
         return [(item.name, item.value) for item in cls]
 
 
@@ -27,5 +27,5 @@ class ManagerRole(Enum):
     PROG_MANAGER = "Program", "Program Manager"
 
     @classmethod
-    def choices(cls):
+    def choices(cls) -> List[Tuple[str, str]]:
         return [(item.value[0], item.value[1]) for item in cls]

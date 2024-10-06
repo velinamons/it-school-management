@@ -21,35 +21,45 @@
         <div class="row gx-5">
             <!-- Filters Section -->
             <div class="col-lg-3 mb-5">
-                <div class="bg-light p-4 shadow-sm rounded">
-                    <h5 class="fw-bold mb-4">Filter by</h5>
-                    <form method="get">
-                        <!-- Experience Filter -->
-                        <div class="mb-4">
-                            <label class="form-label fw-bold">Experience</label>
-                            {% for checkbox in filter.form.experience %}
-                                <div class="form-check">
-                                    {{ checkbox.tag }}
-                                    <label class="form-check-label" for="{{ checkbox.id_for_label }}">{{ checkbox.choice_label }}</label>
-                                </div>
-                            {% endfor %}
-                        </div>
+                <div class="bg-light p-4 shadow-sm mb-2 rounded">
+                        <h5 class="fw-bold mb-4">Filter & Sort by</h5>
+                        <form method="get">
+                            <!-- Experience Filter -->
+                            <div class="mb-4">
+                                <label class="form-label fw-bold">Experience</label>
+                                {% for checkbox in filter.form.experience %}
+                                    <div class="form-check small">
+                                        {{ checkbox.tag }}
+                                        <label class="form-check-label" for="{{ checkbox.id_for_label }}">{{ checkbox.choice_label }}</label>
+                                    </div>
+                                {% endfor %}
+                            </div>
 
-                        <!-- Filia Filter -->
-                        <div class="mb-4">
-                            <label class="form-label fw-bold">Filia</label>
-                            {% for checkbox in filter.form.filia %}
-                                <div class="form-check">
-                                    {{ checkbox.tag }}
-                                    <label class="form-check-label" for="{{ checkbox.id_for_label }}">{{ checkbox.choice_label }}</label>
-                                </div>
-                            {% endfor %}
-                        </div>
+                            <!-- Filia Filter -->
+                            <div class="mb-4">
+                                <label class="form-label fw-bold">Filia</label>
+                                {% for checkbox in filter.form.filia %}
+                                    <div class="form-check small">
+                                        {{ checkbox.tag }}
+                                        <label class="form-check-label" for="{{ checkbox.id_for_label }}">{{ checkbox.choice_label }}</label>
+                                    </div>
+                                {% endfor %}
+                            </div>
 
-                        <button type="submit" class="btn btn-primary w-100">Filter</button>
-                        <a href="{% url 'courses' %}" class="btn btn-secondary w-100 mt-3">Reset</a>
-                    </form>
-                </div>
+                            <!-- Sorting Options -->
+                            <div class="mb-4">
+                                <label class="form-label fw-bold">Sort by</label>
+                                <select class="form-select" name="sort">
+                                    <option value="name_asc" {% if request.GET.sort == 'name_asc' %}selected{% endif %}>Name (A-Z)</option>
+                                    <option value="name_desc" {% if request.GET.sort == 'name_desc' %}selected{% endif %}>Name (Z-A)</option>
+                                    <option value="newest" {% if request.GET.sort == 'newest' %}selected{% endif %}>Newest</option>
+                                </select>
+                            </div>
+
+                            <button type="submit" class="btn btn-primary w-100">Apply</button>
+                            <a href="{% url 'manage_courses' %}" class="btn btn-secondary w-100 mt-3">Reset</a>
+                        </form>
+                    </div>
             </div>
 
             <!-- Courses Section -->

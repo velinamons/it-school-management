@@ -1,0 +1,69 @@
+{% extends 'base.html' %}
+
+{% block title %}Add New Group{% endblock %}
+
+{% block content %}
+    <section class="py-5">
+        <div class="container px-5 my-3">
+            <div class="text-center my-3">
+                <h1 class="fw-bolder mb-2">Add a New Group</h1>
+                <p class="lead fw-normal text-muted mb-3">Fill out the form below to create a new group.</p>
+            </div>
+
+            <div class="bg-light rounded-3 py-5 px-5 px-md-5 mb-5 custom-margin">
+                <div class="row gx-6 justify-content-center">
+                    <div class="col-lg-8 col-xl-11">
+                        <form method="POST" novalidate>
+                            {% csrf_token %}
+
+                            <!-- Group Name -->
+                            <div class="mb-3">
+                                <label class="form-label">{{ form.name.label }}</label>
+                                <div class="center-input">
+                                    {{ form.name }}  <!-- Render the group name field -->
+                                </div>
+                                <div class="invalid-feedback d-block">
+                                    {% if form.name.errors %}
+                                        {{ form.name.errors }}
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <!-- Course -->
+                            <div class="mb-3">
+                                <label class="form-label">{{ form.course.label }}</label>
+                                <div class="center-input">
+                                    {{ form.course }}  <!-- Render the course field -->
+                                </div>
+                                <div class="invalid-feedback d-block">
+                                    {% if form.course.errors %}
+                                        {{ form.course.errors }}
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <!-- Filia -->
+                            <div class="mb-3">
+                                <label class="form-label">{{ form.filia.label }}</label>
+                                <div class="center-input">
+                                    {{ form.filia }}  <!-- Render the filia field -->
+                                </div>
+                                <div class="invalid-feedback d-block">
+                                    {% if form.filia.errors %}
+                                        {{ form.filia.errors }}
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <!-- Submit Button -->
+                            <div class="text-center">
+                                <button type="submit" class="btn btn-primary btn-lg px-4 me-sm-3">Add Group</button>
+                                <a href="{% url 'manage_groups' %}" class="btn btn-secondary btn-lg px-4 me-sm-3">Cancel</a>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+{% endblock %}

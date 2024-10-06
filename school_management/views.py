@@ -1,7 +1,16 @@
+from django.db.models import QuerySet
 from django.http import HttpRequest, HttpResponse, Http404
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, reverse
 from django.views.decorators.cache import never_cache
-from django.views.generic import ListView, DetailView, TemplateView
+from django.views.generic import (
+    ListView,
+    DetailView,
+    TemplateView,
+    UpdateView,
+    DeleteView,
+    CreateView,
+    View,
+)
 from django_filters.views import FilterView
 from django.utils.decorators import method_decorator
 from django.contrib.auth import logout
@@ -9,23 +18,25 @@ from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth.views import LoginView
 from django.contrib.auth.forms import AuthenticationForm
 from django.urls import reverse_lazy
-
-from .models import Course, Filia
-from school_management.utils.filters import CourseFilter
+from .models import Course, Filia, Group
+from school_management.utils.filters import CourseFilter, GroupFilter
 from school_management.utils.course_filtering import select_course
 from .forms import (
     StudentRegistrationForm,
     CustomAuthenticationForm,
     SuggestionForm,
     ContactForm,
+    CourseForm,
+    GroupForm,
 )
 from school_management.utils.role_checking import (
     user_is_student,
     user_is_teacher,
     user_is_program_manager,
     user_is_education_manager,
-    get_user_role
+    get_user_role,
 )
+from .utils.sorting import apply_sorting
 
 
 def home(request: HttpRequest) -> HttpResponse:
@@ -72,7 +83,7 @@ def logout_view(request: HttpRequest) -> HttpResponse:
     return render(request, "registration/logout_confirmation.html")
 
 
-@method_decorator(login_required, name="dispatch")
+@method_decorator([login_required], name="dispatch")
 class RoleBasedDashboardView(TemplateView):
     def get(self, request: HttpRequest, *args, **kwargs) -> HttpResponse:
         user = request.user
@@ -94,30 +105,195 @@ class TeacherDashboardView(TemplateView):
     template_name = "dashboard/teacher_dashboard.html"
 
 
-@method_decorator([login_required, user_passes_test(user_is_education_manager)], name="dispatch")
+@method_decorator(
+    [login_required, user_passes_test(user_is_education_manager)], name="dispatch"
+)
 class EducationManagerDashboardView(TemplateView):
     template_name = "dashboard/education_manager_dashboard.html"
 
 
-@method_decorator([login_required, user_passes_test(user_is_program_manager)], name="dispatch")
+@method_decorator(
+    [login_required, user_passes_test(user_is_program_manager)], name="dispatch"
+)
 class ProgramManagerDashboardView(TemplateView):
     template_name = "dashboard/program_manager_dashboard.html"
 
 
-@never_cache
-def course_quiz(request: HttpRequest) -> HttpResponse:
-    if request.method == "POST":
-        form = SuggestionForm(request.POST)
-        if form.is_valid():
-            request.session["age_group"] = form.cleaned_data["age_group"]
-            request.session["experience"] = form.cleaned_data["experience"]
-            request.session["learning_goal"] = form.cleaned_data["learning_goal"]
+@method_decorator([login_required], name="dispatch")
+class OperationSuccessView(View):
+    def get(
+        self,
+        request: HttpRequest,
+        operation_type: str,
+        object_name: str,
+        back_url: str,
+        *args,
+        **kwargs,
+    ) -> HttpResponse:
+        back_url = reverse(back_url)
+        context = {
+            "operation_type": operation_type,
+            "object_name": object_name,
+            "back_url": back_url,
+        }
+        return render(request, "managers/operation_success.html", context)
 
-            return redirect("contact_with_quiz")
-    else:
-        form = SuggestionForm()
 
-    return render(request, "unauthorized/course_quiz.html", {"form": form})
+@method_decorator(
+    [login_required, user_passes_test(user_is_program_manager)], name="dispatch"
+)
+class ManageCoursesView(FilterView):
+    model = Course
+    template_name = "managers/manage_courses.html"
+    context_object_name = "courses"
+    filterset_class = CourseFilter
+    paginate_by = None
+
+    def get_queryset(self) -> QuerySet:
+        queryset = Course.objects.prefetch_related(
+            "experience", "groups__filia"
+        ).distinct()
+        sort_option = self.request.GET.get(key="sort", default="name")
+
+        return apply_sorting(queryset, sort_option)
+
+
+@method_decorator(
+    [login_required, user_passes_test(user_is_program_manager)], name="dispatch"
+)
+class ManageCourseAddView(CreateView):
+    model = Course
+    form_class = CourseForm
+    template_name = "managers/add_course.html"
+
+    def get_success_url(self):
+        course_name = self.object.name
+        return reverse(
+            "operation_success",
+            kwargs={
+                "operation_type": "Created",
+                "object_name": course_name,
+                "back_url": "manage_courses",
+            },
+        )
+
+
+@method_decorator(
+    [login_required, user_passes_test(user_is_program_manager)], name="dispatch"
+)
+class ManageCourseChangeView(UpdateView):
+    model = Course
+    form_class = CourseForm
+    template_name = "managers/change_course.html"
+    queryset = Course.objects.all()
+
+    def get_success_url(self):
+        course_name = self.object.name
+        return reverse(
+            "operation_success",
+            kwargs={
+                "operation_type": "Changed",
+                "object_name": course_name,
+                "back_url": "manage_courses",
+            },
+        )
+
+
+@method_decorator(
+    [login_required, user_passes_test(user_is_program_manager)], name="dispatch"
+)
+class ManageCourseDeleteView(DeleteView):
+    model = Course
+    template_name = "managers/delete_course.html"
+    queryset = Course.objects.all()
+
+    def get_success_url(self) -> str:
+        course_name = self.object.name
+        return reverse(
+            "operation_success",
+            kwargs={
+                "operation_type": "Deleted",
+                "object_name": course_name,
+                "back_url": "manage_courses",
+            },
+        )
+
+
+@method_decorator(
+    [login_required, user_passes_test(user_is_program_manager)], name="dispatch"
+)
+class ManageGroupsView(FilterView):
+    model = Group
+    template_name = "managers/manage_groups.html"
+    context_object_name = "groups"
+    filterset_class = GroupFilter
+    paginate_by = None
+
+    def get_queryset(self) -> QuerySet:
+        queryset = Group.objects.select_related("filia", "course").distinct()
+        sort_option = self.request.GET.get(key="sort", default="name")
+        return apply_sorting(queryset, sort_option)
+
+
+@method_decorator(
+    [login_required, user_passes_test(user_is_program_manager)], name="dispatch"
+)
+class ManageGroupAddView(CreateView):
+    model = Group
+    form_class = GroupForm
+    template_name = "managers/add_group.html"
+
+    def get_success_url(self) -> str:
+        group_name = self.object.name
+        return reverse(
+            "operation_success",
+            kwargs={
+                "operation_type": "Created",
+                "object_name": group_name,
+                "back_url": "manage_groups",
+            },
+        )
+
+
+@method_decorator(
+    [login_required, user_passes_test(user_is_program_manager)], name="dispatch"
+)
+class ManageGroupChangeView(UpdateView):
+    model = Group
+    form_class = GroupForm
+    template_name = "managers/change_group.html"
+    queryset = Group.objects.all()
+
+    def get_success_url(self) -> str:
+        group_name = self.object.name
+        return reverse(
+            "operation_success",
+            kwargs={
+                "operation_type": "Changed",
+                "object_name": group_name,
+                "back_url": "manage_groups",
+            },
+        )
+
+
+@method_decorator(
+    [login_required, user_passes_test(user_is_program_manager)], name="dispatch"
+)
+class ManageGroupDeleteView(DeleteView):
+    model = Group
+    template_name = "managers/delete_group.html"
+    queryset = Group.objects.all()
+
+    def get_success_url(self) -> str:
+        group_name = self.object.name
+        return reverse(
+            "operation_success",
+            kwargs={
+                "operation_type": "Deleted",
+                "object_name": group_name,
+                "back_url": "manage_groups",
+            },
+        )
 
 
 class FiliaListView(ListView):
@@ -137,7 +313,13 @@ class CourseListView(FilterView):
     context_object_name = "courses"
     filterset_class = CourseFilter
     paginate_by = None
-    queryset = Course.objects.prefetch_related("experience", "groups__filia").distinct()
+
+    def get_queryset(self) -> QuerySet:
+        queryset = Course.objects.prefetch_related(
+            "experience", "groups__filia"
+        ).distinct()
+        sort_option = self.request.GET.get(key="sort", default="name")
+        return apply_sorting(queryset, sort_option)
 
 
 class CourseDetailView(DetailView):
@@ -148,6 +330,22 @@ class CourseDetailView(DetailView):
 
 def contact_success(request: HttpRequest) -> HttpResponse:
     return render(request, "unauthorized/contact_success.html")
+
+
+@never_cache
+def course_quiz(request: HttpRequest) -> HttpResponse:
+    if request.method == "POST":
+        form = SuggestionForm(request.POST)
+        if form.is_valid():
+            request.session["age_group"] = form.cleaned_data["age_group"]
+            request.session["experience"] = form.cleaned_data["experience"]
+            request.session["learning_goal"] = form.cleaned_data["learning_goal"]
+
+            return redirect("contact_with_quiz")
+    else:
+        form = SuggestionForm()
+
+    return render(request, "unauthorized/course_quiz.html", {"form": form})
 
 
 @never_cache
@@ -197,12 +395,12 @@ def contact_with_quiz(request: HttpRequest) -> HttpResponse:
 
 
 def custom_404(request: HttpRequest, exception: Http404) -> HttpResponse:
-    return render(request, 'errors/404.html', status=404)
+    return render(request, "errors/404.html", status=404)
 
 
 def custom_500(request: HttpRequest) -> HttpResponse:
-    return render(request, 'errors/500.html', status=500)
+    return render(request, "errors/500.html", status=500)
 
 
 def custom_401(request: HttpRequest, exception: None) -> HttpResponse:
-    return render(request, 'errors/401.html', status=401)
+    return render(request, "errors/401.html", status=401)

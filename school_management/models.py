@@ -83,9 +83,6 @@ class Manager(CustomUser):
         blank=True,
         help_text="Specify the manager role.",
     )
-    managed_filias = models.ManyToManyField(
-        "Filia", related_name="managers", blank=True
-    )
 
     def __str__(self):
         role_display = dict(ManagerRole.choices()).get(self.role, "Manager")

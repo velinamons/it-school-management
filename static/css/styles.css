@@ -224,7 +224,7 @@ strong {
 }
 
 small, .small {
-  font-size: 0.875em;
+  font-size: 0.8em;
 }
 
 mark, .mark {
@@ -1290,7 +1290,7 @@ progress {
   }
   .col-lg-3 {
     flex: 0 0 auto;
-    width: 25%;
+    width: 30%;
   }
   .col-lg-4 {
     flex: 0 0 auto;
@@ -1314,7 +1314,7 @@ progress {
   }
   .col-lg-9 {
     flex: 0 0 auto;
-    width: 75%;
+    width: 70%;
   }
   .col-lg-10 {
     flex: 0 0 auto;
