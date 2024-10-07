@@ -41,46 +41,66 @@ urlpatterns = [
     path(
         "dashboard/program-manager/manage_courses/",
         views.ManageCoursesView.as_view(),
-        name="manage_courses",
+        name="program_manage_courses",
     ),
     path(
         "dashboard/program-manager/manage_courses/<int:pk>/change/",
         views.ManageCourseChangeView.as_view(),
-        name="change_course",
+        name="program_change_course",
     ),
     path(
         "dashboard/program-manager/manage_courses/add/",
         views.ManageCourseAddView.as_view(),
-        name="add_course",
+        name="program_add_course",
     ),
     path(
         "dashboard/program-manager/manage_courses/<int:pk>/delete/",
         views.ManageCourseDeleteView.as_view(),
-        name="delete_course",
+        name="program_delete_course",
     ),
     path(
         "dashboard/program-manager/manage_groups/",
-        views.ManageGroupsView.as_view(),
-        name="manage_groups",
+        views.ProgramManageGroupsView.as_view(),
+        name="program_manage_groups",
     ),
     path(
         "dashboard/program-manager/manage_groups/add/",
         views.ManageGroupAddView.as_view(),
-        name="add_group",
+        name="program_add_group",
     ),
     path(
         "dashboard/program-manager/manage_groups/<int:pk>/change/",
-        views.ManageGroupChangeView.as_view(),
-        name="change_group",
+        views.ProgramManageGroupChangeView.as_view(),
+        name="program_change_group",
     ),
     path(
         "dashboard/program-manager/manage_groups/<int:pk>/delete/",
         views.ManageGroupDeleteView.as_view(),
-        name="delete_group",
+        name="program_delete_group",
     ),
     path(
-        "operation_success/<str:operation_type>/<str:object_name>/<str:back_url>/",
+        "operation_success/<str:operation_type>/<str:object_name>/<path:back_url>/",
         views.OperationSuccessView.as_view(),
         name="operation_success",
+    ),
+    path(
+        "dashboard/education-manager/manage_groups/",
+        views.EducationManageGroupsView.as_view(),
+        name="education_manage_groups",
+    ),
+    path(
+        "dashboard/education-manager/manage_groups/<int:pk>/",
+        views.EducationManageGroupDetailsView.as_view(),
+        name="education_manage_group_details",
+    ),
+    path(
+        "dashboard/education-manager/manage_groups/<int:pk>/add_teachers/",
+        views.EducationManageGroupAddTeachersView.as_view(),
+        name="education_add_teachers_to_group",
+    ),
+    path(
+        "dashboard/education-manager/manage_groups/<int:pk>/add_students/",
+        views.EducationManageGroupAddStudentsView.as_view(),
+        name="education_add_students_to_group",
     ),
 ]

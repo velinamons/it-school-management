@@ -338,6 +338,7 @@ th {
   border-color: inherit;
   border-style: solid;
   border-width: 0;
+  height: 44.6px;
 }
 
 label {
@@ -3163,10 +3164,10 @@ textarea.form-control-lg {
 }
 
 .btn-sm, .btn-group-sm > .btn {
-  --bs-btn-padding-y: 0.25rem;
+  --bs-btn-padding-y: 0.2rem;
   --bs-btn-padding-x: 0.5rem;
-  --bs-btn-font-size: 0.875rem;
-  --bs-btn-border-radius: 0.25rem;
+  --bs-btn-font-size: 0.8rem;
+  --bs-btn-border-radius: 0.2rem;
 }
 
 .fade {

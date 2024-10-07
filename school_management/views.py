@@ -1,6 +1,7 @@
+from typing import Any, Dict
 from django.db.models import QuerySet
-from django.http import HttpRequest, HttpResponse, Http404
-from django.shortcuts import render, redirect, reverse
+from django.http import HttpRequest, HttpResponse
+from django.shortcuts import render, redirect, reverse, get_object_or_404
 from django.views.decorators.cache import never_cache
 from django.views.generic import (
     ListView,
@@ -14,11 +15,10 @@ from django.views.generic import (
 from django_filters.views import FilterView
 from django.utils.decorators import method_decorator
 from django.contrib.auth import logout
-from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth.views import LoginView
 from django.contrib.auth.forms import AuthenticationForm
 from django.urls import reverse_lazy
-from .models import Course, Filia, Group
+from .models import Course, Filia, Group, Student, Teacher
 from school_management.utils.filters import CourseFilter, GroupFilter
 from school_management.utils.course_filtering import select_course
 from .forms import (
@@ -37,6 +37,7 @@ from school_management.utils.role_checking import (
     get_user_role,
 )
 from .utils.sorting import apply_sorting
+from .utils.views_decorators import login_required_401, user_passes_test_403
 
 
 def home(request: HttpRequest) -> HttpResponse:
@@ -74,7 +75,7 @@ def register_student(request: HttpRequest) -> HttpResponse:
     return render(request, "registration/register.html", {"form": form})
 
 
-@login_required
+@login_required_401
 def logout_view(request: HttpRequest) -> HttpResponse:
     if request.method == "POST":
         logout(request)
@@ -83,7 +84,7 @@ def logout_view(request: HttpRequest) -> HttpResponse:
     return render(request, "registration/logout_confirmation.html")
 
 
-@method_decorator([login_required], name="dispatch")
+@method_decorator([login_required_401], name="dispatch")
 class RoleBasedDashboardView(TemplateView):
     def get(self, request: HttpRequest, *args, **kwargs) -> HttpResponse:
         user = request.user
@@ -95,31 +96,36 @@ class RoleBasedDashboardView(TemplateView):
         return redirect("home")
 
 
-@method_decorator([login_required, user_passes_test(user_is_student)], name="dispatch")
+@method_decorator(
+    [login_required_401, user_passes_test_403(user_is_student)], name="dispatch"
+)
 class StudentDashboardView(TemplateView):
     template_name = "dashboard/student_dashboard.html"
 
 
-@method_decorator([login_required, user_passes_test(user_is_teacher)], name="dispatch")
+@method_decorator(
+    [login_required_401, user_passes_test_403(user_is_teacher)], name="dispatch"
+)
 class TeacherDashboardView(TemplateView):
     template_name = "dashboard/teacher_dashboard.html"
 
 
 @method_decorator(
-    [login_required, user_passes_test(user_is_education_manager)], name="dispatch"
+    [login_required_401, user_passes_test_403(user_is_education_manager)],
+    name="dispatch",
 )
 class EducationManagerDashboardView(TemplateView):
     template_name = "dashboard/education_manager_dashboard.html"
 
 
 @method_decorator(
-    [login_required, user_passes_test(user_is_program_manager)], name="dispatch"
+    [login_required_401, user_passes_test_403(user_is_program_manager)], name="dispatch"
 )
 class ProgramManagerDashboardView(TemplateView):
     template_name = "dashboard/program_manager_dashboard.html"
 
 
-@method_decorator([login_required], name="dispatch")
+@method_decorator([login_required_401], name="dispatch")
 class OperationSuccessView(View):
     def get(
         self,
@@ -130,7 +136,6 @@ class OperationSuccessView(View):
         *args,
         **kwargs,
     ) -> HttpResponse:
-        back_url = reverse(back_url)
         context = {
             "operation_type": operation_type,
             "object_name": object_name,
@@ -140,11 +145,10 @@ class OperationSuccessView(View):
 
 
 @method_decorator(
-    [login_required, user_passes_test(user_is_program_manager)], name="dispatch"
+    [login_required_401, user_passes_test_403(user_is_program_manager)], name="dispatch"
 )
 class ManageCoursesView(FilterView):
-    model = Course
-    template_name = "managers/manage_courses.html"
+    template_name = "managers/program_manage_courses.html"
     context_object_name = "courses"
     filterset_class = CourseFilter
     paginate_by = None
@@ -159,52 +163,50 @@ class ManageCoursesView(FilterView):
 
 
 @method_decorator(
-    [login_required, user_passes_test(user_is_program_manager)], name="dispatch"
+    [login_required_401, user_passes_test_403(user_is_program_manager)], name="dispatch"
 )
 class ManageCourseAddView(CreateView):
     model = Course
     form_class = CourseForm
-    template_name = "managers/add_course.html"
+    template_name = "managers/program_add_course.html"
 
-    def get_success_url(self):
+    def get_success_url(self) -> str:
         course_name = self.object.name
         return reverse(
             "operation_success",
             kwargs={
                 "operation_type": "Created",
                 "object_name": course_name,
-                "back_url": "manage_courses",
+                "back_url": reverse("program_manage_courses"),
             },
         )
 
 
 @method_decorator(
-    [login_required, user_passes_test(user_is_program_manager)], name="dispatch"
+    [login_required_401, user_passes_test_403(user_is_program_manager)], name="dispatch"
 )
 class ManageCourseChangeView(UpdateView):
-    model = Course
     form_class = CourseForm
-    template_name = "managers/change_course.html"
+    template_name = "managers/program_change_course.html"
     queryset = Course.objects.all()
 
-    def get_success_url(self):
+    def get_success_url(self) -> str:
         course_name = self.object.name
         return reverse(
             "operation_success",
             kwargs={
                 "operation_type": "Changed",
                 "object_name": course_name,
-                "back_url": "manage_courses",
+                "back_url": reverse("program_manage_courses"),
             },
         )
 
 
 @method_decorator(
-    [login_required, user_passes_test(user_is_program_manager)], name="dispatch"
+    [login_required_401, user_passes_test_403(user_is_program_manager)], name="dispatch"
 )
 class ManageCourseDeleteView(DeleteView):
-    model = Course
-    template_name = "managers/delete_course.html"
+    template_name = "managers/program_delete_course.html"
     queryset = Course.objects.all()
 
     def get_success_url(self) -> str:
@@ -214,17 +216,16 @@ class ManageCourseDeleteView(DeleteView):
             kwargs={
                 "operation_type": "Deleted",
                 "object_name": course_name,
-                "back_url": "manage_courses",
+                "back_url": reverse("program_manage_courses"),
             },
         )
 
 
 @method_decorator(
-    [login_required, user_passes_test(user_is_program_manager)], name="dispatch"
+    [login_required_401, user_passes_test_403(user_is_program_manager)], name="dispatch"
 )
-class ManageGroupsView(FilterView):
-    model = Group
-    template_name = "managers/manage_groups.html"
+class ProgramManageGroupsView(FilterView):
+    template_name = "managers/program_manage_groups.html"
     context_object_name = "groups"
     filterset_class = GroupFilter
     paginate_by = None
@@ -236,12 +237,12 @@ class ManageGroupsView(FilterView):
 
 
 @method_decorator(
-    [login_required, user_passes_test(user_is_program_manager)], name="dispatch"
+    [login_required_401, user_passes_test_403(user_is_program_manager)], name="dispatch"
 )
 class ManageGroupAddView(CreateView):
     model = Group
     form_class = GroupForm
-    template_name = "managers/add_group.html"
+    template_name = "managers/program_add_group.html"
 
     def get_success_url(self) -> str:
         group_name = self.object.name
@@ -250,18 +251,17 @@ class ManageGroupAddView(CreateView):
             kwargs={
                 "operation_type": "Created",
                 "object_name": group_name,
-                "back_url": "manage_groups",
+                "back_url": reverse("program_manage_groups"),
             },
         )
 
 
 @method_decorator(
-    [login_required, user_passes_test(user_is_program_manager)], name="dispatch"
+    [login_required_401, user_passes_test_403(user_is_program_manager)], name="dispatch"
 )
-class ManageGroupChangeView(UpdateView):
-    model = Group
+class ProgramManageGroupChangeView(UpdateView):
     form_class = GroupForm
-    template_name = "managers/change_group.html"
+    template_name = "managers/program_change_group.html"
     queryset = Group.objects.all()
 
     def get_success_url(self) -> str:
@@ -271,17 +271,16 @@ class ManageGroupChangeView(UpdateView):
             kwargs={
                 "operation_type": "Changed",
                 "object_name": group_name,
-                "back_url": "manage_groups",
+                "back_url": reverse("program_manage_groups"),
             },
         )
 
 
 @method_decorator(
-    [login_required, user_passes_test(user_is_program_manager)], name="dispatch"
+    [login_required_401, user_passes_test_403(user_is_program_manager)], name="dispatch"
 )
 class ManageGroupDeleteView(DeleteView):
-    model = Group
-    template_name = "managers/delete_group.html"
+    template_name = "managers/program_delete_group.html"
     queryset = Group.objects.all()
 
     def get_success_url(self) -> str:
@@ -291,8 +290,140 @@ class ManageGroupDeleteView(DeleteView):
             kwargs={
                 "operation_type": "Deleted",
                 "object_name": group_name,
-                "back_url": "manage_groups",
+                "back_url": reverse("program_manage_groups"),
             },
+        )
+
+
+@method_decorator(
+    [login_required_401, user_passes_test_403(user_is_education_manager)],
+    name="dispatch",
+)
+class EducationManageGroupsView(FilterView):
+    template_name = "managers/education_manage_groups.html"
+    context_object_name = "groups"
+    filterset_class = GroupFilter
+    paginate_by = None
+
+    def get_queryset(self) -> QuerySet:
+        queryset = Group.objects.select_related("filia", "course").distinct()
+        sort_option = self.request.GET.get(key="sort", default="name")
+        return apply_sorting(queryset, sort_option)
+
+
+@method_decorator(
+    [login_required_401, user_passes_test_403(user_is_education_manager)],
+    name="dispatch",
+)
+class EducationManageGroupDetailsView(TemplateView):
+    template_name = "managers/education_manage_group_details.html"
+
+    def get_context_data(self, **kwargs) -> Dict[str, Any]:
+        context = super().get_context_data(**kwargs)
+        group_id = self.kwargs.get("pk")
+        group = get_object_or_404(Group, pk=group_id)
+
+        students = group.students.all().order_by("first_name", "last_name")
+        teachers = group.teachers.all().order_by("first_name", "last_name")
+
+        context["group"] = group
+        context["students"] = students
+        context["teachers"] = teachers
+        return context
+
+    def post(self, request, *args, **kwargs) -> HttpResponse:
+        group_id = self.kwargs.get("pk")
+        group = get_object_or_404(Group, pk=group_id)
+
+        if "remove_student" in request.POST:
+            student_id = request.POST.get("student_id")
+            student = get_object_or_404(Student, pk=student_id)
+            group.students.remove(student)
+            return redirect(
+                "operation_success",
+                operation_type="Removed",
+                object_name=str(student),
+                back_url=reverse(
+                    "education_manage_group_details", kwargs={"pk": group_id}
+                ),
+            )
+
+        if "remove_teacher" in request.POST:
+            teacher_id = request.POST.get("teacher_id")
+            teacher = get_object_or_404(Teacher, pk=teacher_id)
+            group.teachers.remove(teacher)
+            return redirect(
+                "operation_success",
+                operation_type="Removed",
+                object_name=str(teacher),
+                back_url=reverse(
+                    "education_manage_group_details", kwargs={"pk": group_id}
+                ),
+            )
+
+        return redirect("education_manage_group_details", pk=group_id)
+
+
+@method_decorator(
+    [login_required_401, user_passes_test_403(user_is_education_manager)],
+    name="dispatch",
+)
+class EducationManageGroupAddTeachersView(TemplateView):
+    template_name = "managers/education_add_teachers_to_group.html"
+
+    def get_context_data(self, **kwargs) -> Dict[str, Any]:
+        context = super().get_context_data(**kwargs)
+        group = get_object_or_404(Group, pk=self.kwargs["pk"])
+        available_teachers = Teacher.objects.exclude(teacher_groups=group)
+        context["group"] = group
+        context["available_teachers"] = available_teachers
+        return context
+
+    def post(self, request, *args, **kwargs) -> HttpResponse:
+        group = get_object_or_404(Group, pk=self.kwargs["pk"])
+        teacher_ids = request.POST.getlist("teacher_ids")
+
+        for teacher_id in teacher_ids:
+            teacher = get_object_or_404(Teacher, pk=teacher_id)
+            group.teachers.add(teacher)
+
+        return redirect(
+            "operation_success",
+            operation_type="Added",
+            object_name=f"{len(teacher_ids)} Teacher(s)",
+            back_url=reverse("education_manage_group_details", kwargs={"pk": group.pk}),
+        )
+
+
+@method_decorator(
+    [login_required_401, user_passes_test_403(user_is_education_manager)],
+    name="dispatch",
+)
+class EducationManageGroupAddStudentsView(TemplateView):
+    template_name = "managers/education_add_students_to_group.html"
+
+    def get_context_data(self, **kwargs) -> Dict[str, Any]:
+        context = super().get_context_data(**kwargs)
+        group = get_object_or_404(Group, pk=self.kwargs["pk"])
+
+        available_students = Student.objects.exclude(student_groups=group)
+        context["group"] = group
+        context["available_students"] = available_students
+        return context
+
+    def post(self, request, *args, **kwargs) -> HttpResponse:
+        group = get_object_or_404(Group, pk=self.kwargs["pk"])
+        student_ids = request.POST.getlist("student_ids")
+
+        for student_id in student_ids:
+            student = get_object_or_404(Student, pk=student_id)
+            group.students.add(student)
+
+        return redirect(
+            "operation_success",
+            operation_type="Added",
+            object_name=f"{len(student_ids)} Student(s)",
+            back_url=reverse("education_manage_group_details", kwargs={"pk": group.pk}),
         )
 
 
@@ -392,15 +523,3 @@ def contact_with_quiz(request: HttpRequest) -> HttpResponse:
             "suggestion_details": suggestion_details,
         },
     )
-
-
-def custom_404(request: HttpRequest, exception: Http404) -> HttpResponse:
-    return render(request, "errors/404.html", status=404)
-
-
-def custom_500(request: HttpRequest) -> HttpResponse:
-    return render(request, "errors/500.html", status=500)
-
-
-def custom_401(request: HttpRequest, exception: None) -> HttpResponse:
-    return render(request, "errors/401.html", status=401)

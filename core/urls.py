@@ -28,6 +28,7 @@ urlpatterns = [
 if settings.DEBUG:
     urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
 
-handler404 = "school_management.views.custom_404"
-handler500 = "school_management.views.custom_500"
-handler401 = "school_management.views.custom_401"
+handler404 = "school_management.utils.error_views.custom_404"
+handler500 = "school_management.utils.error_views.custom_500"
+handler401 = "school_management.utils.error_views.custom_401"
+handler403 = "school_management.utils.error_views.custom_403"
