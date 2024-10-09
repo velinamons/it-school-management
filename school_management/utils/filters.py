@@ -1,7 +1,7 @@
 import django_filters
-from django.forms.widgets import CheckboxSelectMultiple, RadioSelect
+from django.forms.widgets import CheckboxSelectMultiple
 from school_management.models import Course, Experience, Filia, Group
-from school_management.utils.enums import AgeGroup
+from school_management.utils.enums import AgeGroup, GroupStatus
 
 
 class CourseFilter(django_filters.FilterSet):
@@ -48,6 +48,13 @@ class GroupFilter(django_filters.FilterSet):
         conjoined=False,
     )
 
+    status = django_filters.MultipleChoiceFilter(
+        field_name="status",
+        choices=GroupStatus.choices(),
+        widget=CheckboxSelectMultiple(),
+        label="Status",
+    )
+
     class Meta:
         model = Group
-        fields = ["filia", "course"]
+        fields = ["filia", "course", "status"]

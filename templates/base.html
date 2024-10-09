@@ -1,9 +1,9 @@
 {% load static %}
 {% load role_tags %}
-{% is_student user as student %}
-{% is_teacher user as teacher %}
-{% is_education_manager user as education_manager %}
-{% is_program_manager user as program_manager %}
+{% is_student user as student_user %}
+{% is_teacher user as teacher_user %}
+{% is_education_manager user as education_manager_user %}
+{% is_program_manager user as program_manager_user %}
 
 <!DOCTYPE html>
 
@@ -44,19 +44,19 @@
             <div class="collapse navbar-collapse" id="navbarSupportedContent">
                 <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
                     {% if user.is_authenticated %}
-                        {% if student %}
+                        {% if student_user %}
 {#                            <li class="nav-item"><a class="nav-link" href="{% url "student_groups" %}">My Groups</a></li>#}
                             <li class="nav-item"><a class="nav-link" href="{% url "courses" %}">All Courses</a></li>
 {#                            <li class="nav-item"><a class="nav-link" href="{% url "notifications" %}"> Notifications</a></li>#}
-                        {% elif teacher %}
+                        {% elif teacher_user %}
 {#                            <li class="nav-item"><a class="nav-link" href="{% url "teacher_groups" %}">My Groups</a></li>#}
 {#                            <li class="nav-item"><a class="nav-link" href="{% url "notifications" %}"> Notifications</a></li>#}                    
-                        {% elif education_manager %}
+                        {% elif education_manager_user %}
                             <li class="nav-item"><a class="nav-link" href="{% url "education_manage_groups" %}">Manage Groups</a></li>
-{#                            <li class="nav-item"><a class="nav-link" href="{% url "teachers" %}">Teachers</a></li>#}
-{#                            <li class="nav-item"><a class="nav-link" href="{% url "students" %}">Students</a></li>#}
+                            <li class="nav-item"><a class="nav-link" href="{% url "education_all_teachers" %}">Teachers</a></li>
+                            <li class="nav-item"><a class="nav-link" href="{% url "education_all_students" %}">Students</a></li>
 {#                            <li class="nav-item"><a class="nav-link" href="{% url "enrollment_requests" %}">Enrollment Requests</a></li>#}
-                        {% elif program_manager %}
+                        {% elif program_manager_user %}
                             <li class="nav-item"><a class="nav-link" href="{% url "program_manage_courses" %}">Manage Courses</a></li>
                             <li class="nav-item"><a class="nav-link" href="{% url "program_manage_groups" %}">Manage Groups</a></li>
                         {% endif %}
@@ -84,6 +84,7 @@
 
 
 <main class="flex-shrink-0">
+{% include 'includes/modal.html' %}
     {% block content %}
         <!-- Main content -->
     {% endblock %}

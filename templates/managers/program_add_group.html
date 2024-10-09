@@ -20,7 +20,7 @@
                             <div class="mb-3">
                                 <label class="form-label">{{ form.name.label }}</label>
                                 <div class="center-input">
-                                    {{ form.name }}  <!-- Render the group name field -->
+                                    {{ form.name }}
                                 </div>
                                 <div class="invalid-feedback d-block">
                                     {% if form.name.errors %}
@@ -33,7 +33,7 @@
                             <div class="mb-3">
                                 <label class="form-label">{{ form.course.label }}</label>
                                 <div class="center-input">
-                                    {{ form.course }}  <!-- Render the course field -->
+                                    {{ form.course }}
                                 </div>
                                 <div class="invalid-feedback d-block">
                                     {% if form.course.errors %}
@@ -46,11 +46,23 @@
                             <div class="mb-3">
                                 <label class="form-label">{{ form.filia.label }}</label>
                                 <div class="center-input">
-                                    {{ form.filia }}  <!-- Render the filia field -->
+                                    {{ form.filia }} 
                                 </div>
                                 <div class="invalid-feedback d-block">
                                     {% if form.filia.errors %}
                                         {{ form.filia.errors }}
+                                    {% endif %}
+                                </div>
+                            </div>
+                        
+                            <div class="mb-3">
+                                <label class="form-label">{{ form.group_size.label }}</label>
+                                <div class="center-input">
+                                    {{ form.group_size }} 
+                                </div>
+                                <div class="invalid-feedback d-block">
+                                    {% if form.group_size.errors %}
+                                        {{ form.group_size.errors }}
                                     {% endif %}
                                 </div>
                             </div>

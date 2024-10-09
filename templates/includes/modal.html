@@ -1,0 +1,31 @@
+
+<div class="modal fade" id="notificationModal" tabindex="-1" role="dialog" aria-labelledby="notificationModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header center-input">
+                <h5 class="modal-title " id="notificationModalLabel">Notification</h5>
+            </div>
+            <div class="modal-body center-input">
+                <p id="modalMessage"></p>
+            </div>
+            <div class="modal-footer center-input">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Include jQuery and Bootstrap JS -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+<script>
+    function showModal(message) {
+        $("#modalMessage").text(message);
+        $("#notificationModal").modal("show");
+    }
+    
+    {% if messages %}
+        showModal("{% for message in messages %}{{ message }}{% if not forloop.last %} {% endif %}{% endfor %}");
+    {% endif %}
+</script>

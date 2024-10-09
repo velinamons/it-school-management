@@ -3,9 +3,15 @@ from django.contrib.auth.models import (
     AbstractBaseUser,
     PermissionsMixin,
 )
+from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db import models
 from django.utils.translation import gettext_lazy as _
-from school_management.utils.enums import AgeGroup, ContactMessageStatus, ManagerRole
+from school_management.utils.enums import (
+    AgeGroup,
+    ContactMessageStatus,
+    ManagerRole,
+    GroupStatus,
+)
 from .utils.validators import phone_number_validator
 
 
@@ -132,6 +138,14 @@ class Group(models.Model):
     name = models.CharField(_("Name"), max_length=100)
     course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name="groups")
     filia = models.ForeignKey(Filia, on_delete=models.CASCADE, related_name="groups")
+    status = models.CharField(
+        max_length=30,
+        choices=GroupStatus.choices(),
+        default=GroupStatus.ENROLLMENT_STARTED.value[0],
+    )
+    group_size = models.IntegerField(
+        default=10, validators=[MinValueValidator(2), MaxValueValidator(20)]
+    )
 
     def __str__(self):
         return f"{self.name} - {self.course.name}"

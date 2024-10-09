@@ -40,22 +40,22 @@ urlpatterns = [
     ),
     path(
         "dashboard/program-manager/manage_courses/",
-        views.ManageCoursesView.as_view(),
+        views.ProgramManageCoursesView.as_view(),
         name="program_manage_courses",
     ),
     path(
         "dashboard/program-manager/manage_courses/<int:pk>/change/",
-        views.ManageCourseChangeView.as_view(),
+        views.ProgramManageCourseChangeView.as_view(),
         name="program_change_course",
     ),
     path(
         "dashboard/program-manager/manage_courses/add/",
-        views.ManageCourseAddView.as_view(),
+        views.ProgramManageCourseAddView.as_view(),
         name="program_add_course",
     ),
     path(
         "dashboard/program-manager/manage_courses/<int:pk>/delete/",
-        views.ManageCourseDeleteView.as_view(),
+        views.ProgramManageCourseDeleteView.as_view(),
         name="program_delete_course",
     ),
     path(
@@ -65,7 +65,7 @@ urlpatterns = [
     ),
     path(
         "dashboard/program-manager/manage_groups/add/",
-        views.ManageGroupAddView.as_view(),
+        views.ProgramManageGroupAddView.as_view(),
         name="program_add_group",
     ),
     path(
@@ -77,11 +77,6 @@ urlpatterns = [
         "dashboard/program-manager/manage_groups/<int:pk>/delete/",
         views.ManageGroupDeleteView.as_view(),
         name="program_delete_group",
-    ),
-    path(
-        "operation_success/<str:operation_type>/<str:object_name>/<path:back_url>/",
-        views.OperationSuccessView.as_view(),
-        name="operation_success",
     ),
     path(
         "dashboard/education-manager/manage_groups/",
@@ -103,4 +98,26 @@ urlpatterns = [
         views.EducationManageGroupAddStudentsView.as_view(),
         name="education_add_students_to_group",
     ),
+    path(
+        "dashboard/education-manager/all_students/",
+        views.EducationManageAllStudentsView.as_view(),
+        name="education_all_students",
+    ),
+    path(
+        "dashboard/education-manager/all_teachers/",
+        views.EducationManageAllTeachersView.as_view(),
+        name="education_all_teachers",
+    ),
+    path(
+        "dashboard/education-manager/students/<int:pk>/",
+        views.EducationStudentDetailView.as_view(),
+        name="education_student_detail"
+    ),
+
+    path(
+        "dashboard/education-manager/teachers/<int:pk>/",
+        views.EducationTeacherDetailView.as_view(),
+        name="education_teacher_detail"
+    ),
+
 ]

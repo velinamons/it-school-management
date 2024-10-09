@@ -1,0 +1,74 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}All Students | Education Manager{% endblock %}
+
+{% block content %}
+    <!-- Header Section -->
+    <section class="bg-light-darker">
+        <div class="gx-5 py-5 justify-content-center">
+            <div class="col-lg-12 text-center">
+                <h2 class="fw-bolder">All Students: {{ students_count }}</h2>
+            </div>
+        </div>
+    </section>
+
+    <!-- Students Table Section -->
+    <section class="py-5">
+        <div class="container px-5 my-5">
+            <!-- Search Form -->
+            <form method="get" class="mb-4">
+                <input type="text" name="q" value="{{ search_query }}" class="form-control" placeholder="Search by name or email">
+            </form>
+        
+            <div class="col-lg-12">
+                <table class="table table-striped table-bordered text-center">
+                    <thead>
+                        <tr>
+                            <th class="col-lg-3">Name</th>
+                            <th class="col-lg-3">Email</th>
+                            <th class="col-lg-2">Courses Enrolled</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for student in page_obj %}
+                            <tr>
+                                <td><a href="{% url 'education_student_detail' student.pk %}">{{ student.first_name }} {{ student.last_name }}</a></td>
+                                <td>{{ student.email }}</td>
+                                <td>
+                                    {% if student.student_groups.count == 0 %}
+                                        None
+                                    {% elif student.student_groups.count == 1 %}
+                                        1 Course
+                                    {% else %}
+                                        {{ student.student_groups.count }} Courses
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% empty %}
+                            <tr>
+                                <td colspan="4" class="text-center">No students found.</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <!-- Pagination -->
+            <div class="d-flex justify-content-center">
+                <nav aria-label="Page navigation">
+                    <ul class="pagination">
+                        {% if page_obj.has_previous %}
+                            <li class="page-item"><a class="page-link" href="?page=1&q={{ search_query }}">First</a></li>
+                            <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}&q={{ search_query }}">Previous</a></li>
+                        {% endif %}
+                        <li class="page-item disabled"><a class="page-link">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</a></li>
+                        {% if page_obj.has_next %}
+                            <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}&q={{ search_query }}">Next</a></li>
+                            <li class="page-item"><a class="page-link" href="?page={{ page_obj.paginator.num_pages }}&q={{ search_query }}">Last</a></li>
+                        {% endif %}
+                    </ul>
+                </nav>
+            </div>
+        </div>
+    </section>
+{% endblock %}

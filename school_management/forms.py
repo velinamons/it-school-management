@@ -85,12 +85,13 @@ class CourseForm(forms.ModelForm):
 class GroupForm(forms.ModelForm):
     class Meta:
         model = Group
-        fields = ["name", "course", "filia"]
+        fields = ["name", "course", "filia", "group_size"]
 
         widgets = {
             "name": forms.TextInput(attrs={"class": "form-control", "placeholder": "Enter group name"}),
             "course": forms.Select(attrs={"class": "form-select"}),
             "filia": forms.Select(attrs={"class": "form-select"}),
+            "group_size": forms.NumberInput(attrs={"class": "form-control"}),
         }
 
 
