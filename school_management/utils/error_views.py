@@ -16,4 +16,3 @@ def custom_401(request: HttpRequest) -> HttpResponse:
 
 def custom_403(request: HttpRequest, exception: None) -> HttpResponse:
     return render(request, "errors/403.html", status=403)
-

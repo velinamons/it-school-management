@@ -4,6 +4,7 @@ from django.core.paginator import Paginator
 from django.db.models import QuerySet, Q
 from django.http import HttpRequest, HttpResponse
 from django.shortcuts import render, redirect, reverse, get_object_or_404
+from django.utils import timezone
 from django.views.decorators.cache import never_cache
 from django.views.generic import (
     ListView,
@@ -40,7 +41,7 @@ from school_management.utils.role_checking import (
     get_user_role,
 )
 from .utils.enums import GroupStatus
-from .utils.search_and_pagination import search_and_paginate
+from .utils.search_and_pagination import search_and_paginate, search
 from .utils.sorting import apply_sorting
 from .utils.views_decorators import login_required_401, user_passes_test_403
 
@@ -290,12 +291,20 @@ class EducationManageGroupDetailsView(TemplateView):
 
         context["group"] = group
         context["students"] = students
+        context["students_count"] = students.count()
         context["teachers"] = teachers
         return context
 
     def post(self, request, *args, **kwargs) -> HttpResponse:
         group_id = self.kwargs.get("pk")
         group = get_object_or_404(Group, pk=group_id)
+
+        if group.status == GroupStatus.EDUCATION_COMPLETED.value[0]:
+            messages.error(
+                request,
+                "You cannot modify this group because education has been completed.",
+            )
+            return redirect("education_manage_group_details", pk=group_id)
 
         if "remove_student" in request.POST:
             student_id = request.POST.get("student_id")
@@ -318,12 +327,14 @@ class EducationManageGroupDetailsView(TemplateView):
                 return redirect("education_manage_group_details", pk=group_id)
 
             group.status = GroupStatus.EDUCATION_STARTED.value[0]
+            group.education_start_date = timezone.now()
             group.save()
             messages.success(request, "Education has been started successfully.")
             return redirect("education_manage_group_details", pk=group_id)
 
         if "finish_education" in request.POST:
             group.status = GroupStatus.EDUCATION_COMPLETED.value[0]
+            group.education_finish_date = timezone.now()
             group.save()
             messages.success(request, "Education has been finished successfully.")
 
@@ -340,9 +351,17 @@ class EducationManageGroupAddTeachersView(TemplateView):
     def get_context_data(self, **kwargs) -> Dict[str, Any]:
         context = super().get_context_data(**kwargs)
         group = get_object_or_404(Group, pk=self.kwargs["pk"])
+
         available_teachers = Teacher.objects.exclude(teacher_groups=group)
+
+        available_teachers, search_query = search(
+            self.request, available_teachers, ["first_name", "last_name", "email"]
+        )
+
         context["group"] = group
+        context["search_query"] = search_query
         context["available_teachers"] = available_teachers
+
         return context
 
     def post(self, request, *args, **kwargs) -> HttpResponse:
@@ -368,13 +387,25 @@ class EducationManageGroupAddStudentsView(TemplateView):
         group = get_object_or_404(Group, pk=self.kwargs["pk"])
 
         available_students = Student.objects.exclude(student_groups=group)
+        available_students, search_query = search(
+            self.request, available_students, ["first_name", "last_name", "email"]
+        )
+
         context["group"] = group
+        context["search_query"] = search_query
         context["available_students"] = available_students
         return context
 
     def post(self, request, *args, **kwargs) -> HttpResponse:
         group = get_object_or_404(Group, pk=self.kwargs["pk"])
         student_ids = request.POST.getlist("student_ids")
+        students_count = group.students.count()
+        if students_count + len(student_ids) > group.group_size:
+            messages.error(
+                request,
+                f"You cant add more than {group.group_size - students_count} student(s) to this group.",
+            )
+            return redirect("education_add_students_to_group", pk=group.pk)
 
         for student_id in student_ids:
             student = get_object_or_404(Student, pk=student_id)
@@ -391,7 +422,7 @@ class EducationManageGroupAddStudentsView(TemplateView):
 class EducationManageAllStudentsView(TemplateView):
     template_name = "managers/education_all_students.html"
 
-    def get_context_data(self, **kwargs):
+    def get_context_data(self, **kwargs) -> Dict[str, Any]:
         context = super().get_context_data(**kwargs)
         students_count = Student.objects.count()
         page_obj, search_query = search_and_paginate(
@@ -427,7 +458,7 @@ class EducationStudentDetailView(DetailView):
 class EducationManageAllTeachersView(TemplateView):
     template_name = "managers/education_all_teachers.html"
 
-    def get_context_data(self, **kwargs):
+    def get_context_data(self, **kwargs) -> Dict[str, Any]:
         context = super().get_context_data(**kwargs)
         teachers_count = Teacher.objects.count()
         page_obj, search_query = search_and_paginate(
@@ -448,7 +479,7 @@ class EducationTeacherDetailView(DetailView):
     template_name = "managers/education_teacher_detail.html"
     context_object_name = "teacher"
 
-    def get_context_data(self, **kwargs):
+    def get_context_data(self, **kwargs) -> Dict[str, Any]:
         context = super().get_context_data(**kwargs)
         teacher = self.get_object()
         context["teacher"] = teacher

@@ -13,15 +13,22 @@ def login_required_401(view_func: ViewFunction) -> ViewFunction:
         if not request.user.is_authenticated:
             return custom_401(request)
         return view_func(request, *args, **kwargs)
+
     return wrapped_view
 
 
-def user_passes_test_403(test_func: Callable[[Any], bool]) -> Callable[[ViewFunction], ViewFunction]:
+def user_passes_test_403(
+    test_func: Callable[[Any], bool]
+) -> Callable[[ViewFunction], ViewFunction]:
     def decorator(view_func: ViewFunction) -> ViewFunction:
         @wraps(view_func)
-        def wrapped_view(request: HttpRequest, *args: Any, **kwargs: Any) -> HttpResponse:
+        def wrapped_view(
+            request: HttpRequest, *args: Any, **kwargs: Any
+        ) -> HttpResponse:
             if not test_func(request.user):
                 raise PermissionDenied
             return view_func(request, *args, **kwargs)
+
         return wrapped_view
+
     return decorator

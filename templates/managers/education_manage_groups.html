@@ -22,6 +22,17 @@
                     <div class="bg-light p-4 shadow-sm mb-2 rounded">
                         <h5 class="fw-bold mb-4">Filter & Sort by</h5>
                         <form method="get">
+                            <!-- Status Filter -->
+                            <div class="mb-4">
+                                <label class="form-label fw-bold">Status</label>
+                                {% for checkbox in filter.form.status %}
+                                    <div class="form-check small">
+                                        {{ checkbox.tag }}
+                                        <label class="form-check-label" for="{{ checkbox.id_for_label }}">{{ checkbox.choice_label }}</label>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        
                             <!-- Filia Filter -->
                             <div class="mb-4">
                                 <label class="form-label fw-bold">Filia</label>
@@ -37,17 +48,6 @@
                             <div class="mb-4">
                                 <label class="form-label fw-bold">Course</label>
                                 {% for checkbox in filter.form.course %}
-                                    <div class="form-check small">
-                                        {{ checkbox.tag }}
-                                        <label class="form-check-label" for="{{ checkbox.id_for_label }}">{{ checkbox.choice_label }}</label>
-                                    </div>
-                                {% endfor %}
-                            </div>
-
-                            <!-- Status Filter -->
-                            <div class="mb-4">
-                                <label class="form-label fw-bold">Status</label>
-                                {% for checkbox in filter.form.status %}
                                     <div class="form-check small">
                                         {{ checkbox.tag }}
                                         <label class="form-check-label" for="{{ checkbox.id_for_label }}">{{ checkbox.choice_label }}</label>

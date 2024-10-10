@@ -146,6 +146,8 @@ class Group(models.Model):
     group_size = models.IntegerField(
         default=10, validators=[MinValueValidator(2), MaxValueValidator(20)]
     )
+    education_start_date = models.DateField(blank=True, null=True)
+    education_finish_date = models.DateField(blank=True, null=True)
 
     def __str__(self):
         return f"{self.name} - {self.course.name}"
