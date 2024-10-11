@@ -1,9 +1,7 @@
 from typing import Any, Dict
-
-from django.core.paginator import Paginator
-from django.db.models import QuerySet, Q
+from django.db.models import QuerySet
 from django.http import HttpRequest, HttpResponse
-from django.shortcuts import render, redirect, reverse, get_object_or_404
+from django.shortcuts import render, redirect, get_object_or_404
 from django.utils import timezone
 from django.views.decorators.cache import never_cache
 from django.views.generic import (
@@ -13,7 +11,6 @@ from django.views.generic import (
     UpdateView,
     DeleteView,
     CreateView,
-    View,
 )
 from django_filters.views import FilterView
 from django.utils.decorators import method_decorator
@@ -43,7 +40,7 @@ from school_management.utils.role_checking import (
 from .utils.enums import GroupStatus
 from .utils.search_and_pagination import search_and_paginate, search
 from .utils.sorting import apply_sorting
-from .utils.views_decorators import login_required_401, user_passes_test_403
+from .utils.custom_decorators import login_required_401, user_passes_test_403
 
 
 def home(request: HttpRequest) -> HttpResponse:
@@ -358,20 +355,42 @@ class EducationManageGroupAddTeachersView(TemplateView):
             self.request, available_teachers, ["first_name", "last_name", "email"]
         )
 
-        context["group"] = group
-        context["search_query"] = search_query
-        context["available_teachers"] = available_teachers
-
+        context.update(
+            {
+                "group": group,
+                "search_query": search_query,
+                "available_teachers": available_teachers,
+            }
+        )
         return context
 
+    def validate_teachers(self, teacher_ids: list) -> bool:
+        teachers = Teacher.objects.filter(pk__in=teacher_ids)
+        if teachers.count() != len(teacher_ids):
+            messages.error(self.request, "Some selected teachers do not exist.")
+            return False
+        return True
+
     def post(self, request, *args, **kwargs) -> HttpResponse:
-        group = get_object_or_404(Group, pk=self.kwargs["pk"])
+        group = get_object_or_404(
+            Group.objects.select_for_update(), pk=self.kwargs["pk"]
+        )
         teacher_ids = request.POST.getlist("teacher_ids")
 
-        for teacher_id in teacher_ids:
-            teacher = get_object_or_404(Teacher, pk=teacher_id)
-            group.teachers.add(teacher)
-        messages.success(request, "Selected teachers was added successfully.")
+        if not teacher_ids:
+            messages.error(request, "No teachers were selected.")
+            return redirect("education_add_teachers_to_group", pk=group.pk)
+
+        if not self.validate_teachers(teacher_ids):
+            return redirect("education_add_teachers_to_group", pk=group.pk)
+
+        if group.add_teachers(teacher_ids):
+            messages.success(request, "Selected teachers were added successfully.")
+        else:
+            messages.error(
+                request, "An error occurred while adding teachers. Please try again."
+            )
+
         return redirect("education_manage_group_details", pk=group.pk)
 
 
@@ -391,27 +410,72 @@ class EducationManageGroupAddStudentsView(TemplateView):
             self.request, available_students, ["first_name", "last_name", "email"]
         )
 
-        context["group"] = group
-        context["search_query"] = search_query
-        context["available_students"] = available_students
+        context.update(
+            {
+                "group": group,
+                "search_query": search_query,
+                "available_students": available_students,
+            }
+        )
         return context
 
-    def post(self, request, *args, **kwargs) -> HttpResponse:
-        group = get_object_or_404(Group, pk=self.kwargs["pk"])
-        student_ids = request.POST.getlist("student_ids")
-        students_count = group.students.count()
-        if students_count + len(student_ids) > group.group_size:
+    def validate_group_capacity(
+        self, group: Group, student_ids: list
+    ) -> bool | HttpResponse:
+        current_students_count = group.students.count()
+        new_students_count = len(student_ids)
+
+        if current_students_count + new_students_count > group.group_size:
+            available_slots = group.group_size - current_students_count
+
+            if available_slots <= 0:
+                messages.error(
+                    self.request,
+                    "Cannot add any more students to this group. The group is already full.",
+                )
+                return redirect("education_manage_group_details", pk=group.pk)
+
             messages.error(
-                request,
-                f"You cant add more than {group.group_size - students_count} student(s) to this group.",
+                self.request,
+                f"You can only add {available_slots} student(s) to this group.",
             )
+            return False
+
+        return True
+
+    def validate_students(self, student_ids: list) -> bool:
+        students = Student.objects.filter(pk__in=student_ids)
+        if students.count() != len(student_ids):
+            messages.error(self.request, "Some selected students do not exist.")
+            return False
+        return True
+
+    def post(self, request, *args, **kwargs) -> HttpResponse:
+        group = get_object_or_404(
+            Group.objects.select_for_update(), pk=self.kwargs["pk"]
+        )
+        student_ids = request.POST.getlist("student_ids")
+
+        if not student_ids:
+            messages.error(request, "No students were selected.")
             return redirect("education_add_students_to_group", pk=group.pk)
 
-        for student_id in student_ids:
-            student = get_object_or_404(Student, pk=student_id)
-            group.students.add(student)
+        validate_capacity_response = self.validate_group_capacity(group, student_ids)
+        if isinstance(validate_capacity_response, HttpResponse):
+            return validate_capacity_response
+        if not validate_capacity_response:
+            return redirect("education_add_students_to_group", pk=group.pk)
 
-        messages.success(request, "Selected students was added successfully.")
+        if not self.validate_students(student_ids):
+            return redirect("education_add_students_to_group", pk=group.pk)
+
+        if group.add_students(student_ids):
+            messages.success(request, "Selected students were added successfully.")
+        else:
+            messages.error(
+                request, "An error occurred while adding students. Please try again."
+            )
+
         return redirect("education_manage_group_details", pk=group.pk)
 
 

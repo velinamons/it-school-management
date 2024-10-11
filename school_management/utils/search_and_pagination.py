@@ -24,7 +24,7 @@ def paginate(request: HttpRequest, queryset: QuerySet, per_page: int = 5) -> Pag
 
 
 def search_and_paginate(
-    request: HttpRequest, model: Model, search_fields: List[str], per_page: int = 5
+    request: HttpRequest, model, search_fields: List[str], per_page: int = 5
 ) -> Tuple[Page, str]:
     queryset = model.objects.all()
     queryset, search_query = search(request, queryset, search_fields)

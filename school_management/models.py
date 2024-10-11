@@ -1,10 +1,13 @@
+from typing import List
+
 from django.contrib.auth.models import (
     BaseUserManager,
     AbstractBaseUser,
     PermissionsMixin,
 )
 from django.core.validators import MinValueValidator, MaxValueValidator
-from django.db import models
+from django.db import models, transaction, IntegrityError
+from django.db.models import QuerySet
 from django.utils.translation import gettext_lazy as _
 from school_management.utils.enums import (
     AgeGroup,
@@ -12,6 +15,7 @@ from school_management.utils.enums import (
     ManagerRole,
     GroupStatus,
 )
+from .utils.custom_decorators import exception_handler
 from .utils.validators import phone_number_validator
 
 
@@ -151,6 +155,24 @@ class Group(models.Model):
 
     def __str__(self):
         return f"{self.name} - {self.course.name}"
+
+    @transaction.atomic
+    @exception_handler
+    def add_students(self, student_ids: List[int]) -> bool:
+        students = Student.objects.filter(pk__in=student_ids)
+        if not students:
+            return False
+        self.students.add(*students)
+        return True
+
+    @transaction.atomic
+    @exception_handler
+    def add_teachers(self, teacher_ids: List[int]) -> bool:
+        teachers = Teacher.objects.filter(pk__in=teacher_ids)
+        if not teachers:
+            return False
+        self.teachers.add(*teachers)
+        return True
 
 
 class ContactMessage(models.Model):
