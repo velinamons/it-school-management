@@ -2,7 +2,6 @@ from typing import Any, Dict
 from django.db.models import QuerySet
 from django.http import HttpRequest, HttpResponse
 from django.shortcuts import render, redirect, get_object_or_404
-from django.utils import timezone
 from django.views.decorators.cache import never_cache
 from django.views.generic import (
     ListView,
@@ -278,18 +277,24 @@ class EducationManageGroupsView(FilterView):
 class EducationManageGroupDetailsView(TemplateView):
     template_name = "managers/education_manage_group_details.html"
 
+    def get_group(self) -> Group:
+        return get_object_or_404(Group.objects.select_for_update(), pk=self.kwargs.get("pk"))
+
     def get_context_data(self, **kwargs) -> Dict[str, Any]:
         context = super().get_context_data(**kwargs)
-        group_id = self.kwargs.get("pk")
-        group = get_object_or_404(Group, pk=group_id)
+        group = self.get_group()
 
         students = group.students.all().order_by("first_name", "last_name")
         teachers = group.teachers.all().order_by("first_name", "last_name")
 
-        context["group"] = group
-        context["students"] = students
-        context["students_count"] = students.count()
-        context["teachers"] = teachers
+        context.update(
+            {
+                "group": group,
+                "students": students,
+                "students_count": students.count(),
+                "teachers": teachers,
+            }
+        )
         return context
 
     def post(self, request, *args, **kwargs) -> HttpResponse:
@@ -297,45 +302,38 @@ class EducationManageGroupDetailsView(TemplateView):
         group = get_object_or_404(Group, pk=group_id)
 
         if group.status == GroupStatus.EDUCATION_COMPLETED.value[0]:
-            messages.error(
-                request,
-                "You cannot modify this group because education has been completed.",
-            )
+            messages.error(request, "You cannot modify this group because education has been completed.")
             return redirect("education_manage_group_details", pk=group_id)
 
         if "remove_student" in request.POST:
             student_id = request.POST.get("student_id")
             student = get_object_or_404(Student, pk=student_id)
-            group.students.remove(student)
-            messages.success(request, "Student was removed successfully.")
+            if group.remove_students([student.pk]):
+                messages.success(request, "Student was removed successfully.")
+            else:
+                messages.error(
+                    request, "An error occurred while removing student. Please try again."
+                )
 
         if "remove_teacher" in request.POST:
             teacher_id = request.POST.get("teacher_id")
             teacher = get_object_or_404(Teacher, pk=teacher_id)
-            group.teachers.remove(teacher)
-            messages.success(request, "Teacher was removed successfully.")
+            if group.remove_teachers([teacher.pk]):
+                messages.success(request, "Teacher was removed successfully.")
+            else:
+                messages.error(
+                    request, "An error occurred while removing teacher. Please try again."
+                )
 
         if "start_education" in request.POST:
-            if group.students.count() == 0 or group.teachers.count() == 0:
-                messages.error(
-                    request,
-                    "You cannot start education without students and teachers in the group.",
-                )
-                return redirect("education_manage_group_details", pk=group_id)
-
-            group.status = GroupStatus.EDUCATION_STARTED.value[0]
-            group.education_start_date = timezone.now()
-            group.save()
-            messages.success(request, "Education has been started successfully.")
+            if group.start_education(request):
+                messages.success(request, "Education has been started successfully.")
             return redirect("education_manage_group_details", pk=group_id)
 
         if "finish_education" in request.POST:
-            group.status = GroupStatus.EDUCATION_COMPLETED.value[0]
-            group.education_finish_date = timezone.now()
-            group.save()
-            messages.success(request, "Education has been finished successfully.")
-
-        return redirect("education_manage_group_details", pk=group_id)
+            if group.finish_education(request):
+                messages.success(request, "Education has been finished successfully.")
+            return redirect("education_manage_group_details", pk=group_id)
 
 
 @method_decorator(

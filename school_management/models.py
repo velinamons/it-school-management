@@ -1,13 +1,16 @@
 from typing import List
 
+from django.contrib import messages
 from django.contrib.auth.models import (
     BaseUserManager,
     AbstractBaseUser,
     PermissionsMixin,
 )
 from django.core.validators import MinValueValidator, MaxValueValidator
-from django.db import models, transaction, IntegrityError
+from django.db import models, transaction
 from django.db.models import QuerySet
+from django.http import HttpRequest
+from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from school_management.utils.enums import (
     AgeGroup,
@@ -172,6 +175,44 @@ class Group(models.Model):
         if not teachers:
             return False
         self.teachers.add(*teachers)
+        return True
+
+    @transaction.atomic
+    @exception_handler
+    def remove_students(self, student_ids: List[int]) -> bool:
+        students = self.students.filter(pk__in=student_ids)
+        if not students.exists():
+            return False
+        self.students.remove(*students)
+        return True
+
+    @transaction.atomic
+    @exception_handler
+    def remove_teachers(self, teacher_ids: List[int]) -> bool:
+        teachers = self.teachers.filter(pk__in=teacher_ids)
+        if not teachers.exists():
+            return False
+        self.teachers.remove(*teachers)
+        return True
+
+    @transaction.atomic
+    @exception_handler
+    def start_education(self, request: HttpRequest) -> bool:
+        if not self.students.exists() or not self.teachers.exists():
+            messages.error(request, "You cannot start education without students and teachers in the group.")
+            return False
+
+        self.status = GroupStatus.EDUCATION_STARTED.value[0]
+        self.education_start_date = timezone.now()
+        self.save()
+        return True
+
+    @transaction.atomic
+    @exception_handler
+    def finish_education(self, request: HttpRequest) -> bool:
+        self.status = GroupStatus.EDUCATION_COMPLETED.value[0]
+        self.education_finish_date = timezone.now()
+        self.save()
         return True
 
 
