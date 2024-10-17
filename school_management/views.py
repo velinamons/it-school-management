@@ -37,7 +37,7 @@ from school_management.utils.role_checking import (
     get_user_role,
 )
 from .utils.enums import GroupStatus
-from .utils.search_and_pagination import search_and_paginate, search
+from .utils.filter_by_search_and_pagination import filter_by_search, filter_by_search_and_paginate
 from .utils.sorting import apply_sorting
 from .utils.custom_decorators import login_required_401, user_passes_test_403
 
@@ -277,12 +277,9 @@ class EducationManageGroupsView(FilterView):
 class EducationManageGroupDetailsView(TemplateView):
     template_name = "managers/education_manage_group_details.html"
 
-    def get_group(self) -> Group:
-        return get_object_or_404(Group.objects.select_for_update(), pk=self.kwargs.get("pk"))
-
     def get_context_data(self, **kwargs) -> Dict[str, Any]:
         context = super().get_context_data(**kwargs)
-        group = self.get_group()
+        group = get_object_or_404(Group, pk=self.kwargs["pk"])
 
         students = group.students.all().order_by("first_name", "last_name")
         teachers = group.teachers.all().order_by("first_name", "last_name")
@@ -298,42 +295,27 @@ class EducationManageGroupDetailsView(TemplateView):
         return context
 
     def post(self, request, *args, **kwargs) -> HttpResponse:
-        group_id = self.kwargs.get("pk")
-        group = get_object_or_404(Group, pk=group_id)
+        group = get_object_or_404(Group.objects.select_for_update(), pk=self.kwargs["pk"])
 
         if group.status == GroupStatus.EDUCATION_COMPLETED.value[0]:
             messages.error(request, "You cannot modify this group because education has been completed.")
-            return redirect("education_manage_group_details", pk=group_id)
-
-        if "remove_student" in request.POST:
-            student_id = request.POST.get("student_id")
-            student = get_object_or_404(Student, pk=student_id)
-            if group.remove_students([student.pk]):
-                messages.success(request, "Student was removed successfully.")
-            else:
-                messages.error(
-                    request, "An error occurred while removing student. Please try again."
-                )
-
-        if "remove_teacher" in request.POST:
-            teacher_id = request.POST.get("teacher_id")
-            teacher = get_object_or_404(Teacher, pk=teacher_id)
-            if group.remove_teachers([teacher.pk]):
-                messages.success(request, "Teacher was removed successfully.")
-            else:
-                messages.error(
-                    request, "An error occurred while removing teacher. Please try again."
-                )
+            return redirect("education_manage_group_details", pk=group.pk)
 
         if "start_education" in request.POST:
             if group.start_education(request):
                 messages.success(request, "Education has been started successfully.")
-            return redirect("education_manage_group_details", pk=group_id)
+            else:
+                messages.error(request, "An error occurred. Please try again.")
+
+            return redirect("education_manage_group_details", pk=group.pk)
 
         if "finish_education" in request.POST:
             if group.finish_education(request):
                 messages.success(request, "Education has been finished successfully.")
-            return redirect("education_manage_group_details", pk=group_id)
+            else:
+                messages.error(request, "An error occurred. Please try again.")
+
+            return redirect("education_manage_group_details", pk=group.pk)
 
 
 @method_decorator(
@@ -348,10 +330,13 @@ class EducationManageGroupAddTeachersView(TemplateView):
         group = get_object_or_404(Group, pk=self.kwargs["pk"])
 
         available_teachers = Teacher.objects.exclude(teacher_groups=group)
+        search_query = self.request.GET.get("q", "")
 
-        available_teachers, search_query = search(
-            self.request, available_teachers, ["first_name", "last_name", "email"]
-        )
+        available_teachers = filter_by_search(
+            queryset=available_teachers,
+            search_query=search_query,
+            search_fields=["first_name", "last_name", "email"],
+        ).order_by("first_name", "last_name")
 
         context.update(
             {
@@ -370,9 +355,7 @@ class EducationManageGroupAddTeachersView(TemplateView):
         return True
 
     def post(self, request, *args, **kwargs) -> HttpResponse:
-        group = get_object_or_404(
-            Group.objects.select_for_update(), pk=self.kwargs["pk"]
-        )
+        group = get_object_or_404(Group.objects.select_for_update(), pk=self.kwargs["pk"])
         teacher_ids = request.POST.getlist("teacher_ids")
 
         if not teacher_ids:
@@ -404,9 +387,14 @@ class EducationManageGroupAddStudentsView(TemplateView):
         group = get_object_or_404(Group, pk=self.kwargs["pk"])
 
         available_students = Student.objects.exclude(student_groups=group)
-        available_students, search_query = search(
-            self.request, available_students, ["first_name", "last_name", "email"]
-        )
+
+        search_query = self.request.GET.get("q", "")
+
+        available_students = filter_by_search(
+            queryset=available_students,
+            search_query=search_query,
+            search_fields=["first_name", "last_name", "email"],
+        ).order_by("first_name", "last_name")
 
         context.update(
             {
@@ -417,54 +405,27 @@ class EducationManageGroupAddStudentsView(TemplateView):
         )
         return context
 
-    def validate_group_capacity(
-        self, group: Group, student_ids: list
-    ) -> bool | HttpResponse:
-        current_students_count = group.students.count()
-        new_students_count = len(student_ids)
-
-        if current_students_count + new_students_count > group.group_size:
-            available_slots = group.group_size - current_students_count
-
-            if available_slots <= 0:
-                messages.error(
-                    self.request,
-                    "Cannot add any more students to this group. The group is already full.",
-                )
-                return redirect("education_manage_group_details", pk=group.pk)
-
-            messages.error(
-                self.request,
-                f"You can only add {available_slots} student(s) to this group.",
-            )
-            return False
-
-        return True
-
-    def validate_students(self, student_ids: list) -> bool:
-        students = Student.objects.filter(pk__in=student_ids)
-        if students.count() != len(student_ids):
-            messages.error(self.request, "Some selected students do not exist.")
-            return False
-        return True
-
     def post(self, request, *args, **kwargs) -> HttpResponse:
-        group = get_object_or_404(
-            Group.objects.select_for_update(), pk=self.kwargs["pk"]
-        )
+        group = get_object_or_404(Group.objects.select_for_update(), pk=self.kwargs["pk"])
         student_ids = request.POST.getlist("student_ids")
 
         if not student_ids:
             messages.error(request, "No students were selected.")
             return redirect("education_add_students_to_group", pk=group.pk)
 
-        validate_capacity_response = self.validate_group_capacity(group, student_ids)
-        if isinstance(validate_capacity_response, HttpResponse):
-            return validate_capacity_response
-        if not validate_capacity_response:
-            return redirect("education_add_students_to_group", pk=group.pk)
+        available_group_slots = group.group_size - group.students.count()
+        if available_group_slots <= 0:
+            messages.error(
+                self.request,
+                "Cannot add any more students to this group. The group is already full.",
+            )
+            return redirect("education_manage_group_details", pk=group.pk)
 
-        if not self.validate_students(student_ids):
+        elif available_group_slots < len(student_ids):
+            messages.error(
+                request,
+                f"You can only add {available_group_slots} student(s) to this group.",
+            )
             return redirect("education_add_students_to_group", pk=group.pk)
 
         if group.add_students(student_ids):
@@ -481,18 +442,126 @@ class EducationManageGroupAddStudentsView(TemplateView):
     [login_required_401, user_passes_test_403(user_is_education_manager)],
     name="dispatch",
 )
+class EducationManageGroupRemoveTeachersView(TemplateView):
+    template_name = "managers/education_remove_teachers_from_group.html"
+
+    def get_context_data(self, **kwargs) -> Dict[str, Any]:
+        context = super().get_context_data(**kwargs)
+        group = get_object_or_404(Group, pk=self.kwargs["pk"])
+        teachers_in_group = Teacher.objects.filter(teacher_groups=group)
+
+        search_query = self.request.GET.get("q", "")
+
+        teachers_in_group = filter_by_search(
+            queryset=teachers_in_group,
+            search_query=search_query,
+            search_fields=["first_name", "last_name", "email"],
+        ).order_by("first_name", "last_name")
+
+        context.update(
+            {
+                "group": group,
+                "search_query": search_query,
+                "teachers_in_group": teachers_in_group,
+            }
+        )
+
+        return context
+
+    def post(self, request, *args, **kwargs) -> HttpResponse:
+        group = get_object_or_404(Group.objects.select_for_update(), pk=self.kwargs["pk"])
+        teacher_ids = request.POST.getlist("teacher_ids")
+
+        if not teacher_ids:
+            messages.error(request, "No teachers were selected for removal.")
+            return redirect("education_remove_teachers_from_group", pk=group.pk)
+
+        if group.remove_teachers(teacher_ids):
+            messages.success(request, "Selected teachers were removed successfully.")
+        else:
+            messages.error(
+                request, "An error occurred while removing teachers. Please try again."
+            )
+
+        return redirect("education_manage_group_details", pk=group.pk)
+
+
+@method_decorator(
+    [login_required_401, user_passes_test_403(user_is_education_manager)],
+    name="dispatch",
+)
+class EducationManageGroupRemoveStudentsView(TemplateView):
+    template_name = "managers/education_remove_students_from_group.html"
+
+    def get_context_data(self, **kwargs) -> Dict[str, Any]:
+        context = super().get_context_data(**kwargs)
+        group = get_object_or_404(Group, pk=self.kwargs["pk"])
+        students_in_group = Student.objects.filter(student_groups=group)
+
+        search_query = self.request.GET.get("q", "")
+
+        students_in_group = filter_by_search(
+            queryset=students_in_group,
+            search_query=search_query,
+            search_fields=["first_name", "last_name", "email"],
+        ).order_by("first_name", "last_name")
+
+        context.update(
+            {
+                "group": group,
+                "search_query": search_query,
+                "students_in_group": students_in_group,
+            }
+        )
+
+        return context
+
+    def post(self, request, *args, **kwargs) -> HttpResponse:
+        group = get_object_or_404(Group.objects.select_for_update(), pk=self.kwargs["pk"])
+        student_ids = request.POST.getlist("student_ids")
+
+        if not student_ids:
+            messages.error(request, "No students were selected for removal.")
+            return redirect("education_remove_students_from_group", pk=group.pk)
+
+        if group.remove_students(student_ids):
+            messages.success(request, "Selected students were removed successfully.")
+        else:
+            messages.error(
+                request, "An error occurred while removing students. Please try again."
+            )
+
+        return redirect("education_manage_group_details", pk=group.pk)
+
+
+@method_decorator(
+    [login_required_401, user_passes_test_403(user_is_education_manager)],
+    name="dispatch",
+)
 class EducationManageAllStudentsView(TemplateView):
     template_name = "managers/education_all_students.html"
 
     def get_context_data(self, **kwargs) -> Dict[str, Any]:
         context = super().get_context_data(**kwargs)
         students_count = Student.objects.count()
-        page_obj, search_query = search_and_paginate(
-            self.request, Student, ["first_name", "last_name", "email"]
+
+        search_query = self.request.GET.get("q", "")
+        page_number = self.request.GET.get("page")
+
+        page_obj = filter_by_search_and_paginate(
+            search_query=search_query,
+            page_number=page_number,
+            model=Student,
+            search_fields=["first_name", "last_name", "email"],
         )
-        context["students_count"] = students_count
-        context["page_obj"] = page_obj
-        context["search_query"] = search_query
+
+        context.update(
+            {
+                "students_count": students_count,
+                "page_obj": page_obj,
+                "search_query": search_query,
+            }
+        )
         return context
 
 
@@ -523,12 +592,25 @@ class EducationManageAllTeachersView(TemplateView):
     def get_context_data(self, **kwargs) -> Dict[str, Any]:
         context = super().get_context_data(**kwargs)
         teachers_count = Teacher.objects.count()
-        page_obj, search_query = search_and_paginate(
-            self.request, Teacher, ["first_name", "last_name", "email"]
+
+        search_query = self.request.GET.get("q", "")
+        page_number = self.request.GET.get("page")
+
+        page_obj = filter_by_search_and_paginate(
+            search_query=search_query,
+            page_number=page_number,
+            model=Teacher,
+            search_fields=["first_name", "last_name", "email"],
         )
-        context["teachers_count"] = teachers_count
-        context["page_obj"] = page_obj
-        context["search_query"] = search_query
+
+        context.update(
+            {
+                "teachers_count": teachers_count,
+                "page_obj": page_obj,
+                "search_query": search_query,
+            }
+        )
+
         return context
 
 

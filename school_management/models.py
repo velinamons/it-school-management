@@ -8,7 +8,6 @@ from django.contrib.auth.models import (
 )
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db import models, transaction
-from django.db.models import QuerySet
 from django.http import HttpRequest
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
@@ -163,7 +162,7 @@ class Group(models.Model):
     @exception_handler
     def add_students(self, student_ids: List[int]) -> bool:
         students = Student.objects.filter(pk__in=student_ids)
-        if not students:
+        if not students.exists():
             return False
         self.students.add(*students)
         return True
@@ -172,7 +171,7 @@ class Group(models.Model):
     @exception_handler
     def add_teachers(self, teacher_ids: List[int]) -> bool:
         teachers = Teacher.objects.filter(pk__in=teacher_ids)
-        if not teachers:
+        if not teachers.exists():
             return False
         self.teachers.add(*teachers)
         return True
@@ -210,6 +209,9 @@ class Group(models.Model):
     @transaction.atomic
     @exception_handler
     def finish_education(self, request: HttpRequest) -> bool:
+        if not self.status == GroupStatus.EDUCATION_STARTED.value[0]:
+            messages.error(request, "You cannot finish education that was not started yet.")
+            return False
         self.status = GroupStatus.EDUCATION_COMPLETED.value[0]
         self.education_finish_date = timezone.now()
         self.save()

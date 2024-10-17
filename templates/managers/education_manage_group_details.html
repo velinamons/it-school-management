@@ -1,7 +1,6 @@
 {% extends 'base.html' %}
 {% load static %}
 
-
 {% block title %}Group Details | Education Manager{% endblock %}
 
 {% block content %}
@@ -41,21 +40,26 @@
     <!-- Students and Teachers Section -->
     <section class="py-5">
         <div class="container px-5">
-            <div class="row gx-5">
+            <div class="row gx-5 justify-content-between">
                 <!-- Students Table -->
-                <div class="col-lg-6 mb-5">
-                    <div class="mb-3 d-flex justify-content-between">
+                <div class="col-lg-5 mb-5">
+                    <div class="mb-3 text-center">
                         <h5>Students</h5>
-                        {% if group.status != 'education_completed' and students_count != group.group_size %}
-                            <a href="{% url 'education_add_students_to_group' group.pk %}" class="btn btn-primary">Add Students</a>
-                        {% endif %}
+                        <div class="mt-2 d-flex justify-content-between">
+                            {% if group.status != 'education_completed' and students_count < group.group_size %}
+                                <a href="{% url 'education_add_students_to_group' group.pk %}" class="btn btn-primary me-2">Add Students</a>
+                            {% endif %}
+                            {% if group.status != 'education_completed' and students_count > 0 %}
+                                <a href="{% url 'education_remove_students_from_group' group.pk %}" class="btn btn-danger">Remove Students</a>
+                            {% endif %}
+                        </div>
                     </div>
                     <table class="table table-striped table-bordered">
                         <thead>
                         <tr>
                             <th class="col-lg-1 text-center">№</th>
-                            <th class="col-lg-6">Name</th>
-                            <th class="col-lg-1 text-center">Remove</th>
+                            <th class="col-lg-4">Name</th>
+                            <!-- Removed the "Remove" column -->
                         </tr>
                         </thead>
                         <tbody>
@@ -63,17 +67,10 @@
                             <tr>
                                 <td class="text-center">{{ forloop.counter }}</td>
                                 <td><a href="{% url 'education_student_detail' student.pk %}">{{ student }}</a></td>
-                                <td class="text-center">
-                                    <form method="post" style="display:inline;">
-                                        {% csrf_token %}
-                                        <input type="hidden" name="student_id" value="{{ student.pk }}">
-                                        <button type="submit" name="remove_student" class="btn btn-danger btn-sm">Remove</button>
-                                    </form>
-                                </td>
                             </tr>
                         {% empty %}
                             <tr>
-                                <td colspan="3" class="text-center">No students enrolled in this group.</td>
+                                <td colspan="2" class="text-center">No students enrolled in this group.</td>
                             </tr>
                         {% endfor %}
                         </tbody>
@@ -81,19 +78,24 @@
                 </div>
 
                 <!-- Teachers Table -->
-                <div class="col-lg-6 mb-5">
-                    <div class="mb-3 d-flex justify-content-between ">
+                <div class="col-lg-5 mb-5">
+                    <div class="mb-3 text-center">
                         <h5>Teachers</h5>
-                        {% if group.status != 'education_completed' %}
-                            <a href="{% url 'education_add_teachers_to_group' group.pk %}" class="btn btn-primary">Add Teachers</a>
-                        {% endif %}
+                        <div class="mt-2 d-flex justify-content-between">
+                            {% if group.status != 'education_completed' and teachers.exists %}
+                                <a href="{% url 'education_add_teachers_to_group' group.pk %}" class="btn btn-primary me-2">Add Teachers</a>
+                                <a href="{% url 'education_remove_teachers_from_group' group.pk %}" class="btn btn-danger">Remove Teachers</a>
+                            {% elif group.status != 'education_completed' %}
+                                <a href="{% url 'education_add_teachers_to_group' group.pk %}" class="btn btn-primary">Add Teachers</a>
+                            {% endif %}
+                        </div>
                     </div>
                     <table class="table table-bordered table-striped">
                         <thead>
                         <tr>
                             <th class="col-lg-1 text-center">№</th>
-                            <th class="col-lg-6">Name</th>
-                            <th class="col-lg-1 text-center">Remove</th>
+                            <th class="col-lg-4">Name</th>
+                            <!-- Removed the "Remove" column -->
                         </tr>
                         </thead>
                         <tbody>
@@ -101,17 +103,10 @@
                             <tr>
                                 <td class="text-center">{{ forloop.counter }}</td>
                                 <td><a href="{% url 'education_teacher_detail' teacher.pk %}">{{ teacher }}</a></td>
-                                <td class="text-center">
-                                    <form method="post" style="display:inline;">
-                                        {% csrf_token %}
-                                        <input type="hidden" name="teacher_id" value="{{ teacher.pk }}">
-                                        <button type="submit" name="remove_teacher" class="btn btn-danger btn-sm">Remove</button>
-                                    </form>
-                                </td>
                             </tr>
                         {% empty %}
                             <tr>
-                                <td colspan="3" class="text-center">No teachers assigned to this group.</td>
+                                <td colspan="2" class="text-center">No teachers assigned to this group.</td>
                             </tr>
                         {% endfor %}
                         </tbody>

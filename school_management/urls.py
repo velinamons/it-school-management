@@ -99,6 +99,16 @@ urlpatterns = [
         name="education_add_students_to_group",
     ),
     path(
+        "dashboard/education-manager/manage_groups/<int:pk>/remove_teachers/",
+        views.EducationManageGroupRemoveTeachersView.as_view(),
+        name="education_remove_teachers_from_group",
+    ),
+    path(
+        "dashboard/education-manager/manage_groups/<int:pk>/remove_students/",
+        views.EducationManageGroupRemoveStudentsView.as_view(),
+        name="education_remove_students_from_group",
+    ),
+    path(
         "dashboard/education-manager/all_students/",
         views.EducationManageAllStudentsView.as_view(),
         name="education_all_students",
