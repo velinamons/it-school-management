@@ -13,11 +13,10 @@ from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from school_management.utils.enums import (
     AgeGroup,
-    ContactMessageStatus,
     ManagerRole,
-    GroupStatus,
+    GroupStatus, EnrollmentStatus, NotificationType,
 )
-from .utils.custom_decorators import exception_handler
+from .utils.decorators.exceptions import exception_handler
 from .utils.validators import phone_number_validator
 
 
@@ -61,6 +60,9 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
 
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = ["first_name", "last_name", "phone_number"]
+
+    class Meta:
+        ordering = ["first_name", "last_name"]
 
     def has_usable_password(self):
         return None
@@ -155,6 +157,9 @@ class Group(models.Model):
     education_start_date = models.DateField(blank=True, null=True)
     education_finish_date = models.DateField(blank=True, null=True)
 
+    class Meta:
+        ordering = ["name"]
+
     def __str__(self):
         return f"{self.name} - {self.course.name}"
 
@@ -218,18 +223,30 @@ class Group(models.Model):
         return True
 
 
-class ContactMessage(models.Model):
-    name = models.CharField(max_length=50)
-    phone_number = models.CharField(max_length=15)
-    message = models.TextField(blank=True, max_length=255)
-    suggested_course = models.CharField(max_length=50, null=True)
-    suggestion_details = models.CharField(max_length=100, null=True)
+class EnrollmentRecord(models.Model):
+    student = models.ForeignKey('Student', on_delete=models.CASCADE)
+    course = models.ForeignKey('Course', on_delete=models.CASCADE)
     status = models.CharField(
         max_length=20,
-        choices=ContactMessageStatus.choices(),
-        default=ContactMessageStatus.choices()[0][0],
+        choices=EnrollmentStatus.choices(),
+        default=EnrollmentStatus.choices()[0][0]
     )
-    sent_date = models.DateTimeField(auto_now_add=True)
+    created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f"Message from {self.name}"
+        return f"Enrollment for {self.course} by {self.student}"
+
+
+class Notification(models.Model):
+    user = models.ForeignKey('CustomUser', on_delete=models.CASCADE)
+    group = models.ForeignKey('Group', null=True, blank=True, on_delete=models.SET_NULL)
+    course = models.ForeignKey('Course', null=True, blank=True, on_delete=models.SET_NULL)
+    type_of_operation = models.CharField(
+        max_length=20,
+        choices=NotificationType.choices()
+    )
+    wide_message = models.TextField()
+    datetime = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Notification: {self.type_of_operation}"

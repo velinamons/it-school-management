@@ -1,5 +1,5 @@
 from django import template
-from school_management.utils.role_checking import (
+from school_management.utils.role_access_checking import (
     user_is_student,
     user_is_teacher,
     user_is_education_manager,

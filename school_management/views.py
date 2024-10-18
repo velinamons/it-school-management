@@ -17,29 +17,28 @@ from django.contrib import messages
 from django.contrib.auth import logout
 from django.contrib.auth.views import LoginView
 from django.contrib.auth.forms import AuthenticationForm
-from django.urls import reverse_lazy
+from django.urls import reverse_lazy, reverse
 from .models import Course, Filia, Group, Student, Teacher
 from school_management.utils.filters import CourseFilter, GroupFilter
-from school_management.utils.course_filtering import select_course
 from .forms import (
     StudentRegistrationForm,
     CustomAuthenticationForm,
-    SuggestionForm,
-    ContactForm,
     CourseForm,
     GroupForm,
 )
-from school_management.utils.role_checking import (
+from school_management.utils.role_access_checking import (
     user_is_student,
     user_is_teacher,
     user_is_program_manager,
     user_is_education_manager,
     get_user_role,
 )
+from .utils.decorators.authentication import login_required_401
+from .utils.decorators.group_membership import student_in_group
+from .utils.decorators.permissions import user_passes_test_403
 from .utils.enums import GroupStatus
 from .utils.filter_by_search_and_pagination import filter_by_search, filter_by_search_and_paginate
 from .utils.sorting import apply_sorting
-from .utils.custom_decorators import login_required_401, user_passes_test_403
 
 
 def home(request: HttpRequest) -> HttpResponse:
@@ -62,15 +61,21 @@ class CustomLoginView(LoginView):
         return super().form_valid(form)
 
     def get_success_url(self) -> str:
-        return reverse_lazy("role_based_dashboard")
+        next_url = self.request.GET.get("next")
+        return next_url or reverse_lazy("role_based_dashboard")
 
 
 def register_student(request: HttpRequest) -> HttpResponse:
+    next_url = request.GET.get("next")
+
     if request.method == "POST":
         form = StudentRegistrationForm(request.POST)
         if form.is_valid():
             form.save()
-            return redirect("login")
+            login_url = reverse("login")
+            if next_url:
+                login_url += f"?next={next_url}"
+            return redirect(login_url)
     else:
         form = StudentRegistrationForm()
 
@@ -281,8 +286,8 @@ class EducationManageGroupDetailsView(TemplateView):
         context = super().get_context_data(**kwargs)
         group = get_object_or_404(Group, pk=self.kwargs["pk"])
 
-        students = group.students.all().order_by("first_name", "last_name")
-        teachers = group.teachers.all().order_by("first_name", "last_name")
+        students = group.students.all()
+        teachers = group.teachers.all()
 
         context.update(
             {
@@ -336,7 +341,7 @@ class EducationManageGroupAddTeachersView(TemplateView):
             queryset=available_teachers,
             search_query=search_query,
             search_fields=["first_name", "last_name", "email"],
-        ).order_by("first_name", "last_name")
+        )
 
         context.update(
             {
@@ -394,7 +399,7 @@ class EducationManageGroupAddStudentsView(TemplateView):
             queryset=available_students,
             search_query=search_query,
             search_fields=["first_name", "last_name", "email"],
-        ).order_by("first_name", "last_name")
+        )
 
         context.update(
             {
@@ -456,7 +461,7 @@ class EducationManageGroupRemoveTeachersView(TemplateView):
             queryset=teachers_in_group,
             search_query=search_query,
             search_fields=["first_name", "last_name", "email"],
-        ).order_by("first_name", "last_name")
+        )
 
         context.update(
             {
@@ -504,7 +509,7 @@ class EducationManageGroupRemoveStudentsView(TemplateView):
             queryset=students_in_group,
             search_query=search_query,
             search_fields=["first_name", "last_name", "email"],
-        ).order_by("first_name", "last_name")
+        )
 
         context.update(
             {
@@ -578,7 +583,7 @@ class EducationStudentDetailView(DetailView):
         context = super().get_context_data(**kwargs)
         student = self.get_object()
         context["student"] = student
-        context["student_groups"] = student.student_groups.all().order_by("name")
+        context["student_groups"] = student.student_groups.all()
         return context
 
 
@@ -667,63 +672,50 @@ def contact_success(request: HttpRequest) -> HttpResponse:
     return render(request, "unauthorized/contact_success.html")
 
 
-@never_cache
-def course_quiz(request: HttpRequest) -> HttpResponse:
-    if request.method == "POST":
-        form = SuggestionForm(request.POST)
-        if form.is_valid():
-            request.session["age_group"] = form.cleaned_data["age_group"]
-            request.session["experience"] = form.cleaned_data["experience"]
-            request.session["learning_goal"] = form.cleaned_data["learning_goal"]
+@method_decorator(
+    [login_required_401, user_passes_test_403(user_is_student)],
+    name="dispatch",
+)
+class StudentGroupListView(TemplateView):
+    template_name = "students/student_groups.html"
 
-            return redirect("contact_with_quiz")
-    else:
-        form = SuggestionForm()
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        student = self.request.user.student
 
-    return render(request, "unauthorized/course_quiz.html", {"form": form})
-
-
-@never_cache
-def contact_with_quiz(request: HttpRequest) -> HttpResponse:
-    age_group = request.session.get("age_group", "")
-    experience = request.session.get("experience", "")
-    learning_goal = request.session.get("learning_goal", [])
-
-    if not all([age_group, experience, learning_goal]):
-        return redirect("course_quiz")
-
-    suggestion_details = (
-        f"Age: {age_group}. Experience: {experience}. Goal: {', '.join(learning_goal)}."
-    )
-    selected_course = select_course(age_group, experience, learning_goal)
-
-    if selected_course:
-        suggested_course_name = selected_course.name
-    else:
-        suggested_course_name = "No suitable course found."
-
-    if request.method == "POST":
-        form = ContactForm(request.POST)
-        if form.is_valid():
-            contact_message = form.save(commit=False)
-            contact_message.suggested_course = suggested_course_name
-            contact_message.suggestion_details = suggestion_details
-            contact_message.save()
-            return redirect("contact_success")
-    else:
-        form = ContactForm(
-            initial={
-                "suggested_course": suggested_course_name,
-                "suggestion_details": suggestion_details,
-            }
+        context["enrollment_groups"] = student.student_groups.filter(
+            status="enrollment_started"
+        )
+        context["education_groups"] = student.student_groups.filter(
+            status="education_started"
+        )
+        context["finished_groups"] = student.student_groups.filter(
+            status="education_completed"
         )
 
-    return render(
-        request,
-        "unauthorized/contact_with_quiz.html",
-        {
-            "form": form,
-            "suggested_course": suggested_course_name,
-            "suggestion_details": suggestion_details,
-        },
-    )
+        return context
+
+
+@method_decorator(
+    [login_required_401, student_in_group],
+    name="dispatch",
+)
+class StudentGroupDetailsView(TemplateView):
+    template_name = "students/student_group_details.html"
+
+    def get_context_data(self, **kwargs: Any) -> Dict[str, Any]:
+        context = super().get_context_data(**kwargs)
+        group = get_object_or_404(Group, pk=self.kwargs["pk"])
+
+        students = group.students.all()
+        teachers = group.teachers.all()
+
+        context.update(
+            {
+                "group": group,
+                "students": students,
+                "students_count": students.count(),
+                "teachers": teachers,
+            }
+        )
+        return context

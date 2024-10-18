@@ -1,0 +1,85 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}My Groups | Student{% endblock %}
+
+{% block content %}
+    <section class="py-5 ">
+        <div class="container px-5 my-5">
+            <div class="row gx-5 mb-5">
+                <div class="col-12">
+                    <h3 class="text-center mb-4">Enrollment Ongoing</h3>
+                </div>
+                {% for group in enrollment_groups %}
+                    <div class="col-md-6 col-lg-4 mb-5">
+                        <div class="card h-100 shadow border-0">
+                            <img class="card-img-top" src="https://dummyimage.com/600x350/e0e3e8/0011ff&text={{ group.name }}" alt="{{ group.name }}" />
+                            <div class="card-body p-4">
+                                <div class="badge bg-primary2 bg-gradient rounded-pill mb-2">{{ group.get_status_display }}</div>
+                                <h5 class="card-title mb-3">{{ group.name }}</h5>
+                                <p class="card-text">{{ group.course.name }} - {{ group.filia.name }}</p>
+                            </div>
+                            <div class="card-footer text-center d-flex justify-content-center">
+                                <a href="{% url 'student_group_details' group.pk %}" class="btn btn-primary">View Details</a>
+                            </div>
+                        </div>
+                    </div>
+                {% empty %}
+                    <div class="col-12">
+                        <p class="text-center">No ongoing enrollments found.</p>
+                    </div>
+                {% endfor %}
+            </div>
+
+            <div class="row gx-5 mb-5 bg-light-darker">
+                <div class="col-12">
+                    <h3 class="text-center mb-4">Education Started</h3>
+                </div>
+                {% for group in education_groups %}
+                    <div class="col-md-6 col-lg-4 mb-5">
+                        <div class="card h-100 shadow border-0">
+                            <img class="card-img-top" src="https://dummyimage.com/600x350/e0e3e8/0011ff&text={{ group.name }}" alt="{{ group.name }}" />
+                            <div class="card-body p-4">
+                                <div class="badge bg-primary2 bg-gradient rounded-pill mb-2">{{ group.get_status_display }}</div>
+                                <h5 class="card-title mb-3">{{ group.name }}</h5>
+                                <p class="card-text">{{ group.course.name }} - {{ group.filia.name }}</p>
+                            </div>
+                            <div class="card-footer text-center d-flex justify-content-center">
+                                <a href="{% url 'student_group_details' group.pk %}" class="btn btn-primary">View Details</a>
+                            </div>
+                        </div>
+                    </div>
+                {% empty %}
+                    <div class="col-12">
+                        <p class="text-center">No active education groups found.</p>
+                    </div>
+                {% endfor %}
+            </div>
+
+            <div class="row gx-5">
+                <div class="col-12">
+                    <h3 class="text-center mb-4">Finished Groups</h3>
+                </div>
+                {% for group in finished_groups %}
+                    <div class="col-md-6 col-lg-4 mb-5">
+                        <div class="card h-100 shadow border-0">
+                            <img class="card-img-top" src="https://dummyimage.com/600x350/e0e3e8/0011ff&text={{ group.name }}" alt="{{ group.name }}" />
+                            <div class="card-body p-4">
+                                <div class="badge bg-primary2 bg-gradient rounded-pill mb-2">{{ group.get_status_display }}</div>
+                                <h5 class="card-title mb-3">{{ group.name }}</h5>
+                                <p class="card-text">{{ group.course.name }} - {{ group.filia.name }}</p>
+                            </div>
+                            <div class="card-footer text-center d-flex justify-content-center">
+                                <a href="{% url 'student_group_details' group.pk %}" class="btn btn-primary">View Details</a>
+                            </div>
+                        </div>
+                    </div>
+                {% empty %}
+                    <div class="col-12">
+                        <p class="text-center">No finished groups found.</p>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    </section>
+{% endblock %}
