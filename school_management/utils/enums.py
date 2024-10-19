@@ -28,7 +28,6 @@ class NotificationType(Enum):
     REJECTED = "rejected"
     ADDED = "added"
     REMOVED = "removed"
-    APPROVED = "approved"
 
     @classmethod
     def choices(cls) -> List[Tuple[str, str]]:

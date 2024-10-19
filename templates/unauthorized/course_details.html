@@ -47,14 +47,19 @@
                     <!-- Sidebar or Additional Information -->
                     <div class="card">
                         <div class="card-body">
-                            <h5 class="card-title">Enroll Now</h5>
-                            <p class="card-text">Join our {{ course.name }} course and embark on an exciting journey in robotics!</p>
-                            {% if user.is_authenticated and student_user %}
+                            {% if not course.groups.all %}
+                                <h5 class="card-title">Enrollment closed</h5>
+                                <p class="card-text">No Filias currently offering this course.</p>
+                            {% elif user.is_authenticated and student_user %}
+                                <h5 class="card-title">Enroll Now</h5>
+                                <p class="card-text">Join our {{ course.name }} course and embark on an exciting journey in robotics!</p>
                                 <form method="post" class="d-inline">
                                     {% csrf_token %}
                                     <button type="submit" name="enroll_course" class="btn btn-primary">Enroll</button>
                                 </form>
                             {% else %}
+                                <h5 class="card-title">Enroll Now</h5>
+                                <p class="card-text">Join our {{ course.name }} course and embark on an exciting journey in robotics!</p>
                                 <a href="{% url 'login' %}?next={% url 'course_details' course.pk %}" class="btn btn-primary">Enroll in Course</a>
                             {% endif %}
                         </div>

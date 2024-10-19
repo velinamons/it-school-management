@@ -170,6 +170,15 @@ class Group(models.Model):
         if not students.exists():
             return False
         self.students.add(*students)
+
+        for student in students:
+            Notification().create_notification(
+                user=student.user,
+                course=self.course,
+                operation_type=NotificationType.ADDED.name,
+                group=self
+            )
+
         return True
 
     @transaction.atomic
@@ -179,6 +188,15 @@ class Group(models.Model):
         if not teachers.exists():
             return False
         self.teachers.add(*teachers)
+
+        for teacher in teachers:
+            Notification().create_notification(
+                user=teacher.user,
+                course=self.course,
+                operation_type=NotificationType.ADDED.name,
+                group=self
+            )
+
         return True
 
     @transaction.atomic
@@ -188,6 +206,15 @@ class Group(models.Model):
         if not students.exists():
             return False
         self.students.remove(*students)
+
+        for student in students:
+            Notification().create_notification(
+                user=student.user,
+                course=self.course,
+                operation_type=NotificationType.REMOVED.name,
+                group=self
+            )
+
         return True
 
     @transaction.atomic
@@ -197,6 +224,15 @@ class Group(models.Model):
         if not teachers.exists():
             return False
         self.teachers.remove(*teachers)
+
+        for teacher in teachers:
+            Notification().create_notification(
+                user=teacher.user,
+                course=self.course,
+                operation_type=NotificationType.REMOVED.name,
+                group=self
+            )
+
         return True
 
     @transaction.atomic
@@ -248,5 +284,30 @@ class Notification(models.Model):
     wide_message = models.TextField()
     datetime = models.DateTimeField(auto_now_add=True)
 
+    class Meta:
+        ordering = ['-datetime']
+
     def __str__(self):
         return f"Notification: {self.type_of_operation}"
+
+    @transaction.atomic
+    @exception_handler
+    def create_notification(self, user, course, operation_type, group=None):
+        wide_message = ""
+
+        if operation_type == NotificationType.ADDED.name and group:
+            wide_message = f"You were added to {course.name} - {group.name}."
+        elif operation_type == NotificationType.REJECTED.name:
+            wide_message = f"Your enrollment request for {course.name} was rejected."
+        elif operation_type == NotificationType.REMOVED.name and group:
+            wide_message = f"You were removed from {course.name} - {group.name}."
+
+        notification = Notification(
+            user=user,
+            course=course,
+            group=group,
+            type_of_operation=operation_type,
+            wide_message=wide_message
+        )
+
+        notification.save()
