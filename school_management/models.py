@@ -173,7 +173,7 @@ class Group(models.Model):
 
         for student in students:
             Notification().create_notification(
-                user=student.user,
+                user=student,
                 course=self.course,
                 operation_type=NotificationType.ADDED.name,
                 group=self
@@ -191,7 +191,7 @@ class Group(models.Model):
 
         for teacher in teachers:
             Notification().create_notification(
-                user=teacher.user,
+                user=teacher,
                 course=self.course,
                 operation_type=NotificationType.ADDED.name,
                 group=self
@@ -209,7 +209,7 @@ class Group(models.Model):
 
         for student in students:
             Notification().create_notification(
-                user=student.user,
+                user=student,
                 course=self.course,
                 operation_type=NotificationType.REMOVED.name,
                 group=self
@@ -227,7 +227,7 @@ class Group(models.Model):
 
         for teacher in teachers:
             Notification().create_notification(
-                user=teacher.user,
+                user=teacher,
                 course=self.course,
                 operation_type=NotificationType.REMOVED.name,
                 group=self
