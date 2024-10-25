@@ -1,5 +1,4 @@
 asgiref==3.8.1
-black==24.8.0
 click==8.1.7
 crispy-bootstrap5==2024.2
 Django==5.1.1
@@ -7,8 +6,6 @@ django-crispy-forms==2.3
 django-filter==24.3
 django-stubs==5.1.0
 django-stubs-ext==5.1.0
-mypy==1.11.2
-mypy-extensions==1.0.0
 packaging==24.1
 pathspec==0.12.1
 platformdirs==4.2.2
