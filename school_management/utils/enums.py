@@ -13,21 +13,11 @@ class AgeGroup(Enum):
         return [(item.value[0], item.value[1]) for item in cls]
 
 
-class EnrollmentStatus(Enum):
-    PND = "Pending"
-    INP = "In Process"
-    ACP = "Accepted"
-    REJ = "Rejected"
-
-    @classmethod
-    def choices(cls) -> List[Tuple[str, str]]:
-        return [(item.name, item.value) for item in cls]
-
-
 class NotificationType(Enum):
-    REJECTED = "rejected"
-    ADDED = "added"
-    REMOVED = "removed"
+    SENT = "Request sent"
+    REJECTED = "Rejected"
+    ADDED = "Added"
+    REMOVED = "Removed"
 
     @classmethod
     def choices(cls) -> List[Tuple[str, str]]:
@@ -51,3 +41,12 @@ class GroupStatus(Enum):
     @classmethod
     def choices(cls) -> List[Tuple[str, str]]:
         return [(item.value[0], item.value[1]) for item in cls]
+
+
+class PaymentStatus(Enum):
+    PAID = "Paid"
+    UNPAID = "Unpaid"
+
+    @classmethod
+    def choices(cls) -> List[Tuple[str, str]]:
+        return [(item.name, item.value) for item in cls]

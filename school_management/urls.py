@@ -22,7 +22,7 @@ urlpatterns = [
         name="student_dashboard",
     ),
     path(
-        "dashboard/teacher/",
+        "dashboard/teachers/",
         views.TeacherDashboardView.as_view(),
         name="teacher_dashboard",
     ),
@@ -138,10 +138,18 @@ urlpatterns = [
         name="student_group_details",
     ),
     path(
-        "dashboard/student/groups/<int:pk>/",
-        views.StudentGroupDetailsView.as_view(),
-        name="student_group_details",
+        "dashboard/teacher/groups/",
+        views.TeacherGroupListView.as_view(),
+        name="teacher_groups",
     ),
-
-
+    path(
+        "dashboard/teacher/groups/<int:pk>/",
+        views.TeacherGroupDetailsView.as_view(),
+        name="teacher_group_details",
+    ),
+    path(
+        "notifications/",
+        views.notifications_view,
+        name="notifications",
+    ),
 ]

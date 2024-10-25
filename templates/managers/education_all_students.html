@@ -27,7 +27,7 @@
                         <tr>
                             <th class="col-lg-3">Name</th>
                             <th class="col-lg-3">Email</th>
-                            <th class="col-lg-2">Courses Enrolled</th>
+                            <th class="col-lg-2">Groups Enrolled</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -39,9 +39,9 @@
                                     {% if student.student_groups.count == 0 %}
                                         None
                                     {% elif student.student_groups.count == 1 %}
-                                        1 Course
+                                        1 Group
                                     {% else %}
-                                        {{ student.student_groups.count }} Courses
+                                        {{ student.student_groups.count }} Groups
                                     {% endif %}
                                 </td>
                             </tr>

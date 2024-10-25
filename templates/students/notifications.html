@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ course.name }} | NextGen Robotics{% endblock %}
+
+{% block content %}
+    <section class="py-5">
+        <div class="container px-5 my-5">
+{% for notification in notifications %}
+<div class="notification">
+    <p><strong>{{ notification.datetime }}</strong></p>
+    <p><em>{{ notification.get_type_of_operation_display }}</em></p>
+    <p>{{ notification.wide_message }}</p>
+</div>
+{% empty %}
+<p>No notifications available.</p>
+{% endfor %}
+
+        </div>
+    </section>
+{% endblock %}

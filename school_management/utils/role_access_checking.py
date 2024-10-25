@@ -9,6 +9,10 @@ def user_is_teacher(user: Any) -> bool:
     return hasattr(user, "teacher")
 
 
+def user_is_student_or_teacher(user: Any) -> bool:
+    return hasattr(user, "teacher") or hasattr(user, "student")
+
+
 def user_is_education_manager(user: Any) -> bool:
     return hasattr(user, "manager") and user.manager.role == "Education"
 

@@ -4,47 +4,74 @@
 {% block title %}{{ student.first_name }} {{ student.last_name }} | Student Details{% endblock %}
 
 {% block content %}
-<section class="py-5">
-    <div class="container px-5 my-5">
-        <div class="row gx-5 justify-content-center">
-            <div class="col-lg-8">
-                <h2 class="fw-bolder text-center mb-4">{{ student.first_name }} {{ student.last_name }}</h2>
-                <ul class="list-group mb-5">
-                    <li class="list-group-item"><strong>Email:</strong> {{ student.email }}</li>
-                    <li class="list-group-item"><strong>Phone:</strong> {{ student.phone_number }}</li>
-                </ul>
+    <section class="py-5">
+        <div class="container px-5 my-5">
+            <div class="row gx-5 justify-content-center">
+                <div class="col-lg-10">
+                    <h2 class="fw-bolder text-center mb-4">{{ student.first_name }} {{ student.last_name }}</h2>
+                    <ul class="list-group mb-5">
+                        <li class="list-group-item"><strong>Email:</strong> {{ student.email }}</li>
+                        <li class="list-group-item"><strong>Phone:</strong> {{ student.phone_number }}</li>
+                    </ul>
+                </div>
             </div>
-        </div>
 
-        <div class="row gx-5 justify-content-center">
-            <div class="col-lg-8">
-                <h5 class="mb-3">Groups Enrolled</h5>
-                <table class="table table-striped table-bordered text-center">
-                    <thead>
+            <div class="row gx-5 justify-content-center">
+                <div class="col-lg-10">
+                    <h5 class="mb-3 text-center">Groups Enrolled</h5>
+                    <table class="table table-striped table-bordered text-center">
+                        <thead>
                         <tr>
                             <th>№</th>
                             <th>Group</th>
-                            <th>Course</th>
                             <th>Filia</th>
+                            <th>Group Status</th>
+                            <th>Payment Status</th>
+                            <th>Change Status</th>
+
                         </tr>
-                    </thead>
-                    <tbody>
-                        {% for group in student_groups %}
-                        <tr>
-                            <td>{{ forloop.counter }}</td>
-                            <td><a href="{% url 'education_manage_group_details' group.pk %}">{{ group.name }}</a></td>
-                            <td>{{ group.course }}</td>
-                            <td>{{ group.filia }}</td>
-                        </tr>
+                        </thead>
+                        <tbody>
+                        {% for membership in memberships %}
+                            {% if membership.status == 'PAID' %}
+                            <tr>
+                            {% else %}
+                            <tr class="bg-light-danger">
+                            {% endif %}
+                                <td>{{ forloop.counter }}</td>
+                                <td><a href="{% url 'education_manage_group_details' membership.group.pk %}">{{ membership.group }}</a></td>
+                                <td>{{ membership.group.filia }}</td>
+                                <td>{{ membership.group.get_status_display }}</td>
+                                <td>{{ membership.get_status_display }}</td>
+                                {% if membership.group.status == 'education_completed' %}
+                                    <td> - </td>
+                                {% else %}
+                                    <td class="text-center">
+                                        <form method="post" style="display: inline;">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="group_id" value="{{ membership.group.pk }}">
+                                            {% if membership.status == 'UNPAID' %}
+                                                <button type="submit" name="change_status_paid" class="btn btn-outline-success btn-sm">
+                                                    Mark Paid
+                                                </button>
+                                            {% else %}
+                                                <button type="submit" name="change_status_unpaid" class="btn btn-outline-danger btn-sm">
+                                                    Mark Unpaid
+                                                </button>
+                                            {% endif %}
+                                        </form>
+                                    </td>
+                                {% endif %}
+                            </tr>
                         {% empty %}
-                        <tr>
-                            <td colspan="4" class="text-center">No groups enrolled.</td>
-                        </tr>
+                            <tr>
+                                <td colspan="6" class="text-center">No groups enrolled.</td>
+                            </tr>
                         {% endfor %}
-                    </tbody>
-                </table>
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
-    </div>
-</section>
+    </section>
 {% endblock %}

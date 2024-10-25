@@ -42,7 +42,7 @@
         <div class="container px-5">
             <div class="row gx-5 justify-content-between">
                 <!-- Students Table -->
-                <div class="col-lg-5 mb-5">
+                <div class="col-lg-6 mb-5">
                     <div class="mb-3 text-center">
                         <h5>Students</h5>
                         <div class="mt-2 d-flex justify-content-between">
@@ -59,18 +59,45 @@
                         <tr>
                             <th class="col-lg-1 text-center">№</th>
                             <th class="col-lg-4">Name</th>
-                            <!-- Removed the "Remove" column -->
+                            <th class="col-lg-1 text-center">Status</th>
+                            {% if group.status != 'education_completed' %}
+                            <th class="col-lg-2"></th>
+                            {% endif %}
                         </tr>
                         </thead>
                         <tbody>
-                        {% for student in students %}
+                        {% for membership in memberships %}
+                            {% if membership.status == 'PAID' %}
                             <tr>
+                            {% else %}
+                            <tr class="bg-light-danger">
+                            {% endif %}
                                 <td class="text-center">{{ forloop.counter }}</td>
-                                <td><a href="{% url 'education_student_detail' student.pk %}">{{ student }}</a></td>
+                                <td><a href="{% url 'education_student_detail' membership.student.pk %}">{{ membership.student }}</a></td>
+                                <td class="text-center">{{ membership.get_status_display }}</td>
+
+                                {% if group.status != 'education_completed' %}
+                                <td class="text-center">
+                                <form method="post" style="display: inline;">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="student_id" value="{{ membership.student.id }}">
+                                        {% if membership.status == 'UNPAID' %}
+                                            <button type="submit" name="change_status_paid" class="btn btn-outline-success btn-sm">
+                                                Mark Paid
+                                            </button>
+                                        {% else %}
+                                            <button type="submit" name="change_status_unpaid" class="btn btn-outline-danger btn-sm">
+                                                Mark Unpaid
+                                            </button>
+                                        {% endif %}
+                                    </form>
+                                </td>
+                                {% endif %}
+
                             </tr>
                         {% empty %}
                             <tr>
-                                <td colspan="2" class="text-center">No students enrolled in this group.</td>
+                                <td colspan="4" class="text-center">No students enrolled in this group.</td>
                             </tr>
                         {% endfor %}
                         </tbody>

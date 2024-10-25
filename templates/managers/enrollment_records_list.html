@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ course.name }} | NextGen Robotics{% endblock %}
+
+{% block content %}
+    <section class="py-5">
+        <div class="container px-5 my-5">
+
+<h2>Pending Enrollment Requests</h2>
+<table>
+    <thead>
+        <tr>
+            <th>Student</th>
+            <th>Course</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for record in records %}
+            <tr>
+                <td>{{ record.student }}</td>
+                <td>{{ record.course }}</td>
+                <td>
+                    <form method="post" action="{% url 'accept_enrollment' record.id %}">
+                        {% csrf_token %}
+                        <select name="group_id" required>
+                            <option value="">Select Group</option>
+                            {% for group in record.course.groups.all %}  {# Assuming Course has related groups #}
+                                <option value="{{ group.id }}">{{ group.name }}</option>
+                            {% endfor %}
+                        </select>
+                        <button type="submit">Accept</button>
+                    </form>
+                </td>
+            </tr>
+        {% endfor %}
+    </tbody>
+</table>
+        </div>
+    </section>
+{% endblock %}

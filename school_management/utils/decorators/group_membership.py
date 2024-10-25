@@ -22,7 +22,7 @@ def teacher_in_group(view_func: ViewFunction) -> ViewFunction:
     @wraps(view_func)
     def wrapped_view(request: HttpRequest, *args: Any, **kwargs: Any) -> HttpResponse:
         group = get_object_or_404(Group, pk=kwargs["pk"])
-        if not (hasattr(request.user, "teacher") and group.teachers.filter(id=request.user.teacher.id).exists()):
+        if not (hasattr(request.user, "teachers") and group.teachers.filter(id=request.user.teacher.id).exists()):
             raise PermissionDenied
         return view_func(request, *args, **kwargs)
     return wrapped_view

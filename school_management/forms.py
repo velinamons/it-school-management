@@ -1,7 +1,7 @@
 from typing import Any
 from django import forms
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
-from .models import Student, Course, Group
+from .models import Student, Course, Group, Filia
 
 
 class StudentRegistrationForm(UserCreationForm):
@@ -92,3 +92,12 @@ class GroupForm(forms.ModelForm):
             "filia": forms.Select(attrs={"class": "form-select"}),
             "group_size": forms.NumberInput(attrs={"class": "form-control"}),
         }
+
+
+class EnrollmentForm(forms.Form):
+    filia = forms.ModelChoiceField(queryset=Filia.objects.none(), label="Select Filia")
+
+    def __init__(self, *args, course=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        if course:
+            self.fields["filia"].queryset = Filia.objects.filter(groups__course=course).distinct()

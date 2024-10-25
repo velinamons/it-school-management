@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}Group Details | Student{% endblock %}
+{% block title %}Group Details | Teacher{% endblock %}
 
 {% block content %}
     <section class="bg-light-darker">
@@ -14,16 +14,9 @@
                     <li class="list-group-item"><strong>Enrollment:</strong> {{ students_count }}/{{ group.group_size }}</li>
                     <li class="list-group-item"><strong>Group Status:</strong> {{ group.get_status_display }}</li>
                     {% if group.status == 'education_started' %}
-                        <li class="list-group-item"><strong>Education Start Date:</strong> {{ group.education_start_date }} </li>
+                        <li class="list-group-item"><strong>Education Start Date:</strong> {{ group.education_start_date }}</li>
                     {% elif group.status == 'education_completed' %}
-                        <li class="list-group-item"><strong>Education Continued:</strong> {{ group.education_start_date }} - {{ group.education_finish_date }} </li>
-                    {% endif %}
-                
-                    {% if membership %}
-                        <li class="list-group-item"><strong>Your Status:</strong> {{ membership.get_status_display }}</li>
-                        <li class="list-group-item"><strong>Your Join Date:</strong> {{ membership.joined_at|date:"Y-m-d H:i" }}</li>
-                    {% else %}
-                        <li class="list-group-item text-danger">You are not enrolled in this group.</li>
+                        <li class="list-group-item"><strong>Education Continued:</strong> {{ group.education_start_date }} - {{ group.education_finish_date }}</li>
                     {% endif %}
                 </ul>
             </div>
@@ -56,7 +49,7 @@
                         </tbody>
                     </table>
                 </div>
-                
+
                 <div class="col-lg-5 mb-5">
                     <h5 class="text-center">Teachers</h5>
                     <table class="table table-bordered table-striped">

@@ -14,7 +14,7 @@ from django.utils.translation import gettext_lazy as _
 from school_management.utils.enums import (
     AgeGroup,
     ManagerRole,
-    GroupStatus, EnrollmentStatus, NotificationType,
+    GroupStatus, NotificationType, PaymentStatus,
 )
 from .utils.decorators.exceptions import exception_handler
 from .utils.validators import phone_number_validator
@@ -73,11 +73,31 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
 
 class Student(CustomUser):
     student_groups = models.ManyToManyField(
-        "Group", related_name="students", blank=True
+        "Group",
+        through="StudentGroupMembership",
+        related_name="students",
+        blank=True,
     )
 
     def __str__(self):
         return f"{self.first_name} {self.last_name}"
+
+
+class StudentGroupMembership(models.Model):
+    student = models.ForeignKey("Student", on_delete=models.CASCADE)
+    group = models.ForeignKey("Group", on_delete=models.CASCADE)
+    status = models.CharField(
+        max_length=10,
+        choices=PaymentStatus.choices(),
+        default=PaymentStatus.UNPAID.name,
+    )
+    joined_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ("student", "group")
+
+    def __str__(self):
+        return f"{self.student} - {self.group} ({self.status})"
 
 
 class Teacher(CustomUser):
@@ -165,20 +185,44 @@ class Group(models.Model):
 
     @transaction.atomic
     @exception_handler
-    def add_students(self, student_ids: List[int]) -> bool:
+    def add_students(self, student_ids: list[int]) -> bool:
         students = Student.objects.filter(pk__in=student_ids)
         if not students.exists():
             return False
-        self.students.add(*students)
 
         for student in students:
-            Notification().create_notification(
-                user=student,
-                course=self.course,
-                operation_type=NotificationType.ADDED.name,
-                group=self
+            membership, created = StudentGroupMembership.objects.get_or_create(
+                student=student, group=self, defaults={"status": PaymentStatus.UNPAID.name}
             )
+            if created:
+                Notification().create_notification(
+                    user=student,
+                    course=self.course,
+                    operation_type=NotificationType.ADDED.name,
+                    group=self,
+                )
+        return True
 
+    @transaction.atomic
+    @exception_handler
+    def change_status_to_paid(self, request: HttpRequest, student_id: int) -> bool:
+        membership = StudentGroupMembership.objects.get(student_id=student_id, group=self)
+        if membership.status == PaymentStatus.PAID.name:
+            messages.error(request, "Status is already Paid")
+            return False
+        membership.status = PaymentStatus.PAID.name
+        membership.save()
+        return True
+
+    @transaction.atomic
+    @exception_handler
+    def change_status_to_unpaid(self, request: HttpRequest, student_id: int) -> bool:
+        membership = StudentGroupMembership.objects.get(student_id=student_id, group=self)
+        if membership.status == PaymentStatus.UNPAID.name:
+            messages.error(request, "Status is already Unpaid")
+            return False
+        membership.status = PaymentStatus.UNPAID.name
+        membership.save()
         return True
 
     @transaction.atomic
@@ -259,24 +303,11 @@ class Group(models.Model):
         return True
 
 
-class EnrollmentRecord(models.Model):
-    student = models.ForeignKey('Student', on_delete=models.CASCADE)
-    course = models.ForeignKey('Course', on_delete=models.CASCADE)
-    status = models.CharField(
-        max_length=20,
-        choices=EnrollmentStatus.choices(),
-        default=EnrollmentStatus.choices()[0][0]
-    )
-    created_at = models.DateTimeField(auto_now_add=True)
-
-    def __str__(self):
-        return f"Enrollment for {self.course} by {self.student}"
-
-
 class Notification(models.Model):
     user = models.ForeignKey('CustomUser', on_delete=models.CASCADE)
     group = models.ForeignKey('Group', null=True, blank=True, on_delete=models.SET_NULL)
     course = models.ForeignKey('Course', null=True, blank=True, on_delete=models.SET_NULL)
+    filia = models.ForeignKey('Filia', null=True, blank=True, on_delete=models.SET_NULL)
     type_of_operation = models.CharField(
         max_length=20,
         choices=NotificationType.choices()
@@ -292,13 +323,15 @@ class Notification(models.Model):
 
     @transaction.atomic
     @exception_handler
-    def create_notification(self, user, course, operation_type, group=None):
+    def create_notification(self, user, course, operation_type, filia=None, group=None) -> None:
         wide_message = ""
 
         if operation_type == NotificationType.ADDED.name and group:
             wide_message = f"You were added to {course.name} - {group.name}."
+        elif operation_type == NotificationType.SENT.name:
+            wide_message = f"Your enrollment request for {course.name} in {filia.name} was sent."
         elif operation_type == NotificationType.REJECTED.name:
-            wide_message = f"Your enrollment request for {course.name} was rejected."
+            wide_message = f"Your enrollment request for {course.name} in {filia.name} was rejected."
         elif operation_type == NotificationType.REMOVED.name and group:
             wide_message = f"You were removed from {course.name} - {group.name}."
 
@@ -306,6 +339,7 @@ class Notification(models.Model):
             user=user,
             course=course,
             group=group,
+            filia=filia,
             type_of_operation=operation_type,
             wide_message=wide_message
         )

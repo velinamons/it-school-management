@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
-from .models import Filia, Course, Group, Student, Teacher, Manager, Experience, Goal
+from .models import Filia, Course, Group, Student, Teacher, Manager, Experience, Goal, StudentGroupMembership
 
 
 class BaseUserAdmin(UserAdmin):
@@ -28,17 +28,22 @@ class BaseUserAdmin(UserAdmin):
         js = ("js/scripts.js",)
 
 
+class StudentGroupMembershipInline(admin.TabularInline):
+    model = StudentGroupMembership
+    extra = 1
+
+
 @admin.register(Student)
 class StudentAdmin(BaseUserAdmin):
     fieldsets = BaseUserAdmin.fieldsets + (
-        ("Student Details", {"fields": ("student_groups",)}),
+        ("Student Details", {"fields": ()}),
     )
     list_display = BaseUserAdmin.list_display + ("student_groups_list",)
-    filter_horizontal = ("student_groups",)
+    inlines = [StudentGroupMembershipInline]
 
     @admin.display(description="Student Groups")
     def student_groups_list(self, obj):
-        return ", ".join([filia.name for filia in obj.student_groups.all()])
+        return ", ".join([group.group.name for group in obj.studentgroupmembership_set.all()])
 
 
 @admin.register(Teacher)

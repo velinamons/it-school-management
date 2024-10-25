@@ -2,14 +2,13 @@ from typing import Any, Dict
 from django.db.models import QuerySet
 from django.http import HttpRequest, HttpResponse
 from django.shortcuts import render, redirect, get_object_or_404
-from django.views.decorators.cache import never_cache
 from django.views.generic import (
     ListView,
     DetailView,
     TemplateView,
     UpdateView,
     DeleteView,
-    CreateView,
+    CreateView, View,
 )
 from django_filters.views import FilterView
 from django.utils.decorators import method_decorator
@@ -18,20 +17,20 @@ from django.contrib.auth import logout
 from django.contrib.auth.views import LoginView
 from django.contrib.auth.forms import AuthenticationForm
 from django.urls import reverse_lazy, reverse
-from .models import Course, Filia, Group, Student, Teacher
+from .models import Course, Filia, Group, Student, Teacher, Notification, StudentGroupMembership
 from school_management.utils.filters import CourseFilter, GroupFilter
 from .forms import (
     StudentRegistrationForm,
     CustomAuthenticationForm,
     CourseForm,
-    GroupForm,
+    GroupForm, EnrollmentForm,
 )
 from school_management.utils.role_access_checking import (
     user_is_student,
     user_is_teacher,
     user_is_program_manager,
     user_is_education_manager,
-    get_user_role,
+    get_user_role, user_is_student_or_teacher,
 )
 from .utils.decorators.authentication import login_required_401
 from .utils.decorators.group_membership import student_in_group
@@ -286,14 +285,14 @@ class EducationManageGroupDetailsView(TemplateView):
         context = super().get_context_data(**kwargs)
         group = get_object_or_404(Group, pk=self.kwargs["pk"])
 
-        students = group.students.all()
+        memberships = StudentGroupMembership.objects.filter(group=group)
         teachers = group.teachers.all()
 
         context.update(
             {
                 "group": group,
-                "students": students,
-                "students_count": students.count(),
+                "memberships": memberships,
+                "students_count": memberships.count(),
                 "teachers": teachers,
             }
         )
@@ -304,6 +303,18 @@ class EducationManageGroupDetailsView(TemplateView):
 
         if group.status == GroupStatus.EDUCATION_COMPLETED.value[0]:
             messages.error(request, "You cannot modify this group because education has been completed.")
+            return redirect("education_manage_group_details", pk=group.pk)
+
+        if "change_status_paid" in request.POST:
+            student_id = request.POST.get("student_id")
+            if group.change_status_to_paid(request, student_id):
+                messages.success(request, "Status changed to Paid.")
+            return redirect("education_manage_group_details", pk=group.pk)
+
+        if "change_status_unpaid" in request.POST:
+            student_id = request.POST.get("student_id")
+            if group.change_status_to_unpaid(request, student_id):
+                messages.success(request, "Status changed to Unpaid.")
             return redirect("education_manage_group_details", pk=group.pk)
 
         if "start_education" in request.POST:
@@ -582,9 +593,30 @@ class EducationStudentDetailView(DetailView):
     def get_context_data(self, **kwargs) -> Dict[str, Any]:
         context = super().get_context_data(**kwargs)
         student = self.get_object()
-        context["student"] = student
-        context["student_groups"] = student.student_groups.all()
+        memberships = StudentGroupMembership.objects.filter(student=student)
+
+        context.update(
+            {
+                "memberships": memberships,
+                "student": student,
+            }
+        )
+
         return context
+
+    def post(self, request, *args, **kwargs) -> HttpResponse:
+        group_id = request.POST.get("group_id")
+        group = get_object_or_404(Group, pk=group_id)
+
+        if "change_status_paid" in request.POST:
+            if group.change_status_to_paid(request, self.get_object()):
+                messages.success(request, "Status changed to Paid.")
+            return redirect("education_student_detail", pk=self.get_object().pk)
+
+        if "change_status_unpaid" in request.POST:
+            if group.change_status_to_unpaid(request, self.get_object()):
+                messages.success(request, "Status changed to Unpaid.")
+            return redirect("education_student_detail", pk=self.get_object().pk)
 
 
 @method_decorator(
@@ -626,12 +658,12 @@ class EducationManageAllTeachersView(TemplateView):
 class EducationTeacherDetailView(DetailView):
     model = Teacher
     template_name = "managers/education_teacher_detail.html"
-    context_object_name = "teacher"
+    context_object_name = "teachers"
 
     def get_context_data(self, **kwargs) -> Dict[str, Any]:
         context = super().get_context_data(**kwargs)
         teacher = self.get_object()
-        context["teacher"] = teacher
+        context["teachers"] = teacher
         context["teacher_groups"] = teacher.teacher_groups.all()
         return context
 
@@ -667,6 +699,46 @@ class CourseDetailView(DetailView):
     context_object_name = "course"
     queryset = Course.objects.prefetch_related("experience", "groups__filia")
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        course = self.get_object()
+        context["form"] = EnrollmentForm(course=course)
+        return context
+
+    def post(self, request, *args, **kwargs):
+        course = get_object_or_404(Course, pk=self.kwargs["pk"])
+        student = get_object_or_404(Student, pk=request.user.id)
+        form = EnrollmentForm(request.POST, course=course)
+
+        if form.is_valid():
+            filia = form.cleaned_data["filia"]
+
+            has_active_enrollment = StudentGroupMembership.objects.filter(
+                student=student,
+                group__course=course,
+                group__filia=filia,
+                group__status__in=["education_started", "enrollment_started"]
+            ).exists()
+
+            if has_active_enrollment:
+                messages.error(request, "You already have an active enrollment in this course and filia.")
+            else:
+                matching_groups = Group.objects.filter(course=course, filia=filia)
+
+                for group in matching_groups:
+                    available_group_slots = group.group_size - group.students.count()
+                    if available_group_slots > 0:
+                        if group.add_students([student.id]):
+                            messages.success(request, f"You have been added to the group: {group.name}.")
+                            return redirect("student_group_details", pk=group.pk)
+                else:
+                    messages.error(request, "No available slots on groups. Try again later")
+
+            return redirect("course_details", pk=course.pk)
+        else:
+            messages.error(request, "Something went wrong. Please try again.")
+            return self.get(request, *args, **kwargs)
+
 
 def contact_success(request: HttpRequest) -> HttpResponse:
     return render(request, "unauthorized/contact_success.html")
@@ -681,7 +753,7 @@ class StudentGroupListView(TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        student = self.request.user.student
+        student = get_object_or_404(Student, pk=self.request.user.id)
 
         context["enrollment_groups"] = student.student_groups.filter(
             status="enrollment_started"
@@ -707,6 +779,59 @@ class StudentGroupDetailsView(TemplateView):
         context = super().get_context_data(**kwargs)
         group = get_object_or_404(Group, pk=self.kwargs["pk"])
 
+        student = self.request.user
+        membership = StudentGroupMembership.objects.filter(student=student, group=group).first()
+
+        students = group.students.all()
+        teachers = group.teachers.all()
+
+        context.update(
+            {
+                "group": group,
+                "membership": membership,
+                "students": students,
+                "students_count": students.count(),
+                "teachers": teachers,
+            }
+        )
+        return context
+
+
+@method_decorator(
+    [login_required_401, user_passes_test_403(user_is_teacher)],
+    name="dispatch",
+)
+class TeacherGroupListView(TemplateView):
+    template_name = "teachers/teacher_groups.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        teacher = get_object_or_404(Teacher, pk=self.request.user.id)
+
+        context["enrollment_groups"] = teacher.teacher_groups.filter(
+            status="enrollment_started"
+        )
+        context["education_groups"] = teacher.teacher_groups.filter(
+            status="education_started"
+        )
+        context["finished_groups"] = teacher.teacher_groups.filter(
+            status="education_completed"
+        )
+
+        return context
+
+
+@method_decorator(
+    [login_required_401, user_passes_test_403(user_is_teacher)],
+    name="dispatch",
+)
+class TeacherGroupDetailsView(TemplateView):
+    template_name = "teachers/teacher_group_details.html"
+
+    def get_context_data(self, **kwargs: Any) -> Dict[str, Any]:
+        context = super().get_context_data(**kwargs)
+        group = get_object_or_404(Group, pk=self.kwargs["pk"])
+
         students = group.students.all()
         teachers = group.teachers.all()
 
@@ -719,3 +844,10 @@ class StudentGroupDetailsView(TemplateView):
             }
         )
         return context
+
+
+@login_required_401
+@user_passes_test_403(user_is_student_or_teacher)
+def notifications_view(request):
+    notifications = Notification.objects.filter(user=request.user).order_by('-datetime')
+    return render(request, 'students/notifications.html', {'notifications': notifications})
